@@ -146,6 +146,7 @@ void APlayerCharacter::AddHealth(float Amount)
 
 void APlayerCharacter::OnDeath()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Player Dead"));
 	// 게임종료 로직
 }
 

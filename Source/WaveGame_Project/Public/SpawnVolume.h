@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ItemSpawnRow.h"
+#include "WaveDataRow.h"
 #include "SpawnVolume.generated.h"
 
 class UBoxComponent;
@@ -22,15 +22,17 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	void SpawnRandomItem();
-	FVector GetRandomPointInVolume() const;
-	void SpawnItem(TSubclassOf<AActor> ItemClass);
-	FItemSpawnRow* GetRandomItem() const;
-
+	FVector GetRandomPointInVolume(UBoxComponent* Box) const;
+	void SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount);
+	TArray<AActor*> SpawnObstacleSide(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
+	TArray<AActor*> SpawnObstacleTop(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UBoxComponent* SpawningBox;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemTable")
-	UDataTable* ItemDataTable;
-
+	USceneComponent* RootScene;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
+	UBoxComponent* ItemSpawnBox;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
+	UBoxComponent* ObstacleTopSpawnBox;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
+	UBoxComponent* ObstacleSideSpawnBox;
 };

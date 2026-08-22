@@ -1,42 +1,43 @@
 ﻿#include "SpawnVolume.h"
 #include "Components/BoxComponent.h"
+#include "CoinItem.h"
 
 ASpawnVolume::ASpawnVolume()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	SpawningBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
-	SetRootComponent(SpawningBox);
+	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(RootScene);
 
-	ItemDataTable = nullptr;
+	ItemSpawnBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ItemBox Collision"));
+	ItemSpawnBox->SetupAttachment(RootScene);
+	ItemSpawnBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ItemSpawnBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+	ObstacleTopSpawnBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ObstacleTopBox Collision"));
+	ObstacleTopSpawnBox->SetupAttachment(RootScene);
+	ObstacleTopSpawnBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ObstacleTopSpawnBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+	ObstacleSideSpawnBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ObstacleSideBox Collision"));
+	ObstacleSideSpawnBox->SetupAttachment(RootScene);
+	ObstacleSideSpawnBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ObstacleSideSpawnBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 }
 
 void ASpawnVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ASpawnVolume::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-void ASpawnVolume::SpawnRandomItem()
+FVector ASpawnVolume::GetRandomPointInVolume(UBoxComponent* Box) const
 {
-	if (FItemSpawnRow* SelectedRow = GetRandomItem())
-	{
-		if (UClass* ActualClass = SelectedRow->ItemClass.Get())
-		{
-			SpawnItem(ActualClass);
-		}
-	}
-}
-
-FVector ASpawnVolume::GetRandomPointInVolume() const
-{
-	FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
-	FVector BoxOrigin = SpawningBox->GetComponentLocation();
+	FVector BoxExtent = Box->GetScaledBoxExtent();
+	FVector BoxOrigin = Box->GetComponentLocation();
 
 	return BoxOrigin + FVector(
 		FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
@@ -44,43 +45,57 @@ FVector ASpawnVolume::GetRandomPointInVolume() const
 		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z));
 }
 
-void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass)
+void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
 {
-	GetWorld()->SpawnActor<AActor>(
-		ItemClass,
-		GetRandomPointInVolume(),
-		FRotator::ZeroRotator
-	);
+	if (!ItemClass || SpawnCount <= 0) return;
+	FActorSpawnParameters SpawnParams;
+
+	for (int32 i = 0; i < SpawnCount; ++i)
+	{
+		GetWorld()->SpawnActor<AActor>(
+			ItemClass,
+			GetRandomPointInVolume(ItemSpawnBox),
+			FRotator::ZeroRotator
+		);
+	}
 }
 
-FItemSpawnRow* ASpawnVolume::GetRandomItem() const
+TArray<AActor*> ASpawnVolume::SpawnObstacleSide(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount)
 {
-	if (!ItemDataTable) return nullptr;
+	TArray<AActor*> RetArray;
+	if (!ObstacleClass || SpawnCount <= 0) return RetArray;
 
-	TArray<FItemSpawnRow*> AllRows;
-	static const FString ContextString(TEXT("ItemSpawnContext"));
-	ItemDataTable->GetAllRows(ContextString, AllRows);
+	FVector BoxExtent = ObstacleSideSpawnBox->GetScaledBoxExtent();
+	FVector BoxOirigin = ObstacleSideSpawnBox->GetComponentLocation();
 
-	if (AllRows.IsEmpty()) return nullptr;
+	float ObstacleDistance = static_cast<float>(SpawnCount + 1);
 
-	float TotalChance = 0.0f;
-	for (const FItemSpawnRow* Row : AllRows)
+	float X = BoxExtent.X * 2.f / (SpawnCount + 1);
+	float Y = BoxExtent.Y * 2.f / (SpawnCount + 1);
+	for (int i = 1; i <= SpawnCount; ++i)
 	{
-		TotalChance += Row->SpawnChance;
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X + (X * i), BoxExtent.Y, BoxExtent.Z), FRotator(0.f, -90.f, 0.f)));
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(-BoxExtent.X + (X * i), BoxExtent.Y, BoxExtent.Z), FRotator(0.f, 90.f, 0.f)));
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X, BoxExtent.Y + (Y * i), BoxExtent.Z), FRotator(0.f, -90.f, 0.f)));
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X, -BoxExtent.Y + (Y * i), BoxExtent.Z), FRotator(0.f, 90.f, 0.f)));
 	}
 
-	const float RandValue = FMath::FRandRange(0.0f, TotalChance);
-	float AccumulateChance = 0.0f;
-
-	for (FItemSpawnRow* Row : AllRows)
-	{
-		AccumulateChance += Row->SpawnChance;
-		if (RandValue < AccumulateChance)
-		{
-			return Row;
-		}
-	}
-
-	return nullptr;
+	return RetArray;
 }
+
+TArray<AActor*> ASpawnVolume::SpawnObstacleTop(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount)
+{
+	TArray<AActor*> RetArray;
+	if (!ObstacleClass || SpawnCount <= 0) return RetArray;
+	
+	for (int32 i = 0; i < SpawnCount; ++i)
+	{
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, GetRandomPointInVolume(ObstacleTopSpawnBox), FRotator::ZeroRotator));
+	}
+
+	return RetArray;
+}
+
+
+
 
