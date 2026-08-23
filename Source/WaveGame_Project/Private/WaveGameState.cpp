@@ -3,6 +3,7 @@
 #include "SpawnVolume.h"
 #include "CoinItem.h"
 #include "WaveGameInstance.h"
+#include "ObstacleBase.h"
 #include "FallingObstacle.h"
 #include "ExpandingObstacle.h"
 
@@ -20,9 +21,7 @@ void AWaveGameState::BeginPlay()
 
 void AWaveGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
-	GetWorldTimerManager().ClearTimer(FallTimerHandle);
-	GetWorldTimerManager().ClearTimer(ExpandTimerHandle);
+	ClearTimerHandle();
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -47,8 +46,6 @@ void AWaveGameState::AddScore(int32 Amount)
 void AWaveGameState::StartLevel()
 {
 	CurrentWaveIndex = 0;
-	SpawnedCoinCount = 0;
-	CollectedCoinCount = 0;
 	
 	StartWave();
 }
@@ -56,10 +53,11 @@ void AWaveGameState::StartLevel()
 void AWaveGameState::OnCoinCollected()
 {
 	CollectedCoinCount++;
-	if (CollectedCoinCount >= SpawnedCoinCount)
+	if (Score >= WaveGoalScore || CollectedCoinCount >= SpawnedCoinCount)
 	{
 		OnNextWave();
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("Current Score : %d"), Score));
 }
 
 void AWaveGameState::DestroyAllSpawned()
@@ -117,6 +115,10 @@ void AWaveGameState::EndLevel()
 
 void AWaveGameState::StartWave()
 {
+	Score = 0;
+	SpawnedCoinCount = 0;
+	CollectedCoinCount = 0;
+
 	TArray<AActor*> FoundVolumes;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
 	if (FoundVolumes.IsEmpty()) return;
@@ -137,6 +139,7 @@ void AWaveGameState::StartWave()
 
 	FWaveDataRow* CurrentWave = WaveAllRows[CurrentWaveIndex];
 	if (!CurrentWave) return;
+	WaveGoalScore = CurrentWave->GoalScore;
 
 	for (const auto& SpawnItemInfo : CurrentWave->SpawnItemInfo)
 	{
@@ -170,25 +173,21 @@ void AWaveGameState::StartWave()
 					ExpandingObstacles.Add(Cast<AExpandingObstacle>(Actor));
 				}
 			}
-			
 		}
 	}
 
-	GetWorldTimerManager().SetTimer(WaveTimerHandle, this, &AWaveGameState::OnGameOver, CurrentWave->WaveTimeDuration, false);
-	GetWorldTimerManager().SetTimer(FallTimerHandle, this, &AWaveGameState::OnFall, FallDelay, true);
-	GetWorldTimerManager().SetTimer(ExpandTimerHandle, this, &AWaveGameState::OnExpand, ExpandDelay, true);
+	WaveDuration = CurrentWave->WaveDuration;
+	SetTimerHandle();
 	UE_LOG(LogTemp, Warning, TEXT("Level : %d Start! Wave : %d Start! SpawnedCoin : %d coin"), CurrentLevelIndex + 1, CurrentWaveIndex, SpawnedCoinCount);
 }
 
 void AWaveGameState::OnNextWave()
 {
-	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
-	Score = 0;
-	SpawnedCoinCount = 0;
+	ClearTimerHandle();
 	CurrentWaveIndex++;
-	DestroyAllSpawned();
 	FallingObstacles.Empty();
 	ExpandingObstacles.Empty();
+	DestroyAllSpawned();
 
 	if (CurrentWaveIndex >= MaxWave)
 	{
@@ -205,56 +204,107 @@ void AWaveGameState::OnGameOver()
 	// UI 열기
 }
 
-void AWaveGameState::OnFall()
+void AWaveGameState::OnOperateObstacle(EObstacleType ObstacleType)
 {
-	if (FallingObstacles.IsEmpty()) return;
-
-	TArray<AFallingObstacle*> OnSkyObstacles;
-	for (AFallingObstacle* Obstacle : FallingObstacles)
+	TArray<AObstacleBase*> Obstacles;
+	if (ObstacleType == EObstacleType::Fall)
 	{
-		if (Obstacle && !Obstacle->GetIsGround())
+		for (AFallingObstacle* Object : FallingObstacles)
 		{
-			OnSkyObstacles.Add(Obstacle);
+			if (Object || Object->CanActivate()) Obstacles.Add(Object);
+		}
+
+	}
+	else if (ObstacleType == EObstacleType::Expand)
+	{
+		for (AExpandingObstacle* Object : ExpandingObstacles)
+		{
+			if (Object || Object->CanActivate()) Obstacles.Add(Object);
 		}
 	}
 
-	int32 RandCount = FMath::RandRange(1, 5);
-	int32 FallCount = FMath::Min(RandCount, OnSkyObstacles.Num());
+	int32 MaxRandCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
+	int32 RandCount = FMath::RandRange(1, MaxRandCount);
+	int32 SpawnCount = FMath::Min(RandCount, Obstacles.Num());
 
-	for (int i = 0; i < FallCount; ++i)
+	for (int32 i = 0; i < SpawnCount; ++i)
 	{
-		int32 RandIndex = FMath::RandRange(0, OnSkyObstacles.Num() - 1);
-		UE_LOG(LogTemp, Error, TEXT("Fall Current Index : %d"), i);
-		OnSkyObstacles[RandIndex]->StartFall();
+		int32 RandIndex = FMath::RandRange(0, Obstacles.Num() - 1);
 
-		OnSkyObstacles.RemoveAtSwap(RandIndex);
+		Obstacles[RandIndex]->ActivateObstacle();
+
+		Obstacles.RemoveAt(RandIndex);
 	}
-
 }
 
-void AWaveGameState::OnExpand()
+//void AWaveGameState::OnFall()
+//{
+//	if (FallingObstacles.IsEmpty()) return;
+//
+//	TArray<AFallingObstacle*> OnSkyObstacles;
+//	for (AFallingObstacle* Obstacle : FallingObstacles)
+//	{
+//		if (Obstacle && !Obstacle->GetIsGround())
+//		{
+//			OnSkyObstacles.Add(Obstacle);
+//		}
+//	}
+//
+//	int32 MaxRandCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
+//	int32 RandCount = FMath::RandRange(1, MaxRandCount);
+//	int32 FallCount = FMath::Min(RandCount, OnSkyObstacles.Num());
+//
+//	for (int i = 0; i < FallCount; ++i)
+//	{
+//		int32 RandIndex = FMath::RandRange(0, OnSkyObstacles.Num() - 1);
+//		UE_LOG(LogTemp, Error, TEXT("Fall Current Index : %d"), i);
+//		OnSkyObstacles[RandIndex]->StartFall();
+//
+//		OnSkyObstacles.RemoveAtSwap(RandIndex);
+//	}
+//}
+//
+//void AWaveGameState::OnExpand()
+//{
+//	if (ExpandingObstacles.IsEmpty()) return;
+//
+//	TArray<AExpandingObstacle*> AllObject;
+//	for (AExpandingObstacle* Obstacle : ExpandingObstacles)
+//	{
+//		if (Obstacle && !Obstacle->GetIsExpanding())
+//		{
+//			AllObject.Add(Obstacle);
+//		}
+//	}
+//
+//	int32 MaxRandCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
+//	int32 RandCount = FMath::RandRange(2, MaxRandCount);
+//	int32 ExpandCount = FMath::Min(RandCount, AllObject.Num());
+//
+//	for (int32 i = 0; i < ExpandCount; ++i)
+//	{
+//		int32 RandIndex = FMath::RandRange(0, AllObject.Num() - 1);
+//		UE_LOG(LogTemp, Error, TEXT("Expand Current Index : %d"), i);
+//		AllObject[RandIndex]->StartExpand();
+//
+//		AllObject.RemoveAt(RandIndex);
+//	}
+//}
+
+void AWaveGameState::SetTimerHandle()
 {
-	if (ExpandingObstacles.IsEmpty()) return;
+	GetWorldTimerManager().SetTimer(WaveTimerHandle, this, &AWaveGameState::OnGameOver, WaveDuration, false);
+	FTimerDelegate FallDelegate;
+	FallDelegate.BindUObject(this, &AWaveGameState::OnOperateObstacle, EObstacleType::Fall);
+	GetWorldTimerManager().SetTimer(FallTimerHandle, FallDelegate, FallDelay, true);
+	FTimerDelegate ExpandDelegate;
+	ExpandDelegate.BindUObject(this, &AWaveGameState::OnOperateObstacle, EObstacleType::Expand);
+	GetWorldTimerManager().SetTimer(ExpandTimerHandle, ExpandDelegate, ExpandDelay, true);
+}
 
-	TArray<AExpandingObstacle*> AllObject;
-	for (AExpandingObstacle* Obstacle : ExpandingObstacles)
-	{
-		if (Obstacle && !Obstacle->GetIsExpanding())
-		{
-			AllObject.Add(Obstacle);
-		}
-	}
-
-	int32 MaxFallCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
-	int32 RandCount = FMath::RandRange(2, MaxFallCount);
-	int32 ExpandCount = FMath::Min(RandCount, AllObject.Num());
-
-	for (int32 i = 0; i < RandCount; ++i)
-	{
-		int32 RandIndex = FMath::RandRange(0, AllObject.Num() - 1);
-		UE_LOG(LogTemp, Error, TEXT("Expand Current Index : %d"), i);
-		ExpandingObstacles[RandIndex]->StartExpand();
-
-		AllObject.RemoveAt(RandIndex);
-	}
+void AWaveGameState::ClearTimerHandle()
+{
+	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
+	GetWorldTimerManager().ClearTimer(FallTimerHandle);
+	GetWorldTimerManager().ClearTimer(ExpandTimerHandle);
 }

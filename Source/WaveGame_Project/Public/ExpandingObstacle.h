@@ -26,22 +26,22 @@ protected:
 	virtual void BeginPlay() override;
 public:
 	virtual void Tick(float DeltaTime) override;
-	void StartExpand();
+	
+	virtual void ActivateObstacle() override;
+	virtual bool CanActivate() override;
 	float CalculateAlpha();
 
-	bool GetIsExpanding();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand")
 	EEasingMode EasingMode = EEasingMode::EaseIn;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Exapand", meta = (ClampMin = 1.f))
-	float ExpandSpeed = 3.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand", meta = (ClampMin = 1.f))
-	float MaxExpand = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Exapand", meta = (ClampMin = 1.0f))
+	float ExpandSpeed = 3.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand", meta = (ClampMin = 1.0f))
+	float MaxExpand = 10.0f;
 
 private:
 	float Alpha = 0.0f;
-	FVector StartScale = FVector(1.f, 0.01f, 1.f);
-	FVector EndScale = FVector(1.f, MaxExpand, 1.f);
+	FVector StartScale = FVector(1.0f, 1.0f, 1.0f);
+	FVector EndScale = FVector(1.0f, MaxExpand, 1.0f);
 
-	bool bIsExpanding = false;
 };

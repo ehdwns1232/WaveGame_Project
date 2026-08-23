@@ -5,19 +5,22 @@ AFallingObstacle::AFallingObstacle()
 	PrimaryActorTick.bCanEverTick = false;
 	StaticMeshComp->SetSimulatePhysics(false);
 	StaticMeshComp->SetEnableGravity(false);
+	StaticMeshComp->SetMobility(EComponentMobility::Movable);
 }
 
-void AFallingObstacle::StartFall()
+void AFallingObstacle::ActivateObstacle()
 {
 	StaticMeshComp->SetSimulatePhysics(true);
 	StaticMeshComp->SetEnableGravity(true);
-	bIsGround = true;
+	bCanActivate = true;
 	UE_LOG(LogTemp, Warning, TEXT("StartFall End"));
 }
 
-bool AFallingObstacle::GetIsGround() const
+bool AFallingObstacle::CanActivate()
 {
-	return bIsGround;
+	return bCanActivate;
 }
+
+
 
 

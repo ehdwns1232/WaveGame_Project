@@ -13,10 +13,7 @@ public:
 	AFallingObstacle();
 	
 public:
-	void StartFall();
+	virtual void ActivateObstacle() override;
+	virtual bool CanActivate() override;
 
-	bool GetIsGround() const;
-
-private:
-	bool bIsGround = false;
 };

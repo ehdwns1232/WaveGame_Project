@@ -42,13 +42,12 @@ FVector ASpawnVolume::GetRandomPointInVolume(UBoxComponent* Box) const
 	return BoxOrigin + FVector(
 		FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
 		FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
-		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z));
+		FMath::FRandRange(FMath::Max(0.f, -BoxExtent.Z), BoxExtent.Z));
 }
 
 void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
 {
 	if (!ItemClass || SpawnCount <= 0) return;
-	FActorSpawnParameters SpawnParams;
 
 	for (int32 i = 0; i < SpawnCount; ++i)
 	{
@@ -66,20 +65,47 @@ TArray<AActor*> ASpawnVolume::SpawnObstacleSide(TSubclassOf<AActor> ObstacleClas
 	if (!ObstacleClass || SpawnCount <= 0) return RetArray;
 
 	FVector BoxExtent = ObstacleSideSpawnBox->GetScaledBoxExtent();
-	FVector BoxOirigin = ObstacleSideSpawnBox->GetComponentLocation();
+	FVector BoxOriigin = ObstacleSideSpawnBox->GetComponentLocation();
 
-	float ObstacleDistance = static_cast<float>(SpawnCount + 1);
 
-	float X = BoxExtent.X * 2.f / (SpawnCount + 1);
-	float Y = BoxExtent.Y * 2.f / (SpawnCount + 1);
-	for (int i = 1; i <= SpawnCount; ++i)
+	FVector SpawnLocation;
+	FRotator SpawnRotation;
+	for (int32 i = 0; i < SpawnCount; ++i)
 	{
-		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X + (X * i), BoxExtent.Y, BoxExtent.Z), FRotator(0.f, -90.f, 0.f)));
-		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(-BoxExtent.X + (X * i), BoxExtent.Y, BoxExtent.Z), FRotator(0.f, 90.f, 0.f)));
-		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X, BoxExtent.Y + (Y * i), BoxExtent.Z), FRotator(0.f, -90.f, 0.f)));
-		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, BoxOirigin + FVector(BoxExtent.X, -BoxExtent.Y + (Y * i), BoxExtent.Z), FRotator(0.f, 90.f, 0.f)));
-	}
+		int32 RandXY = FMath::RandRange(0, 1);
 
+		if (RandXY)
+		{
+			int32 Opposite = FMath::RandRange(0, 1);
+			if (Opposite)
+			{
+				SpawnLocation = FVector(BoxExtent.X, FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y), BoxExtent.Z);
+				SpawnRotation = FRotator(0.f, 90.0f, 0.f);
+			}
+			else
+			{
+				SpawnLocation = FVector(-BoxExtent.X, FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y), BoxExtent.Z);
+				SpawnRotation = FRotator(0.f, -90.f, 0.f);
+			}
+		}
+		else
+		{
+			int32 Opposite = FMath::RandRange(0, 1);
+			if (Opposite)
+			{
+				SpawnLocation = FVector(FMath::FRandRange(-BoxExtent.X, BoxExtent.X), BoxExtent.Y, BoxExtent.Z);
+				SpawnRotation = FRotator(0.f, -180.f, 0.f);
+			}
+			else
+			{
+				SpawnLocation = FVector(FMath::FRandRange(-BoxExtent.X, BoxExtent.X), -BoxExtent.Y, BoxExtent.Z);
+				SpawnRotation = FRotator(0.f, 0.f, 0.f);
+			}
+		}
+
+		RetArray.Add(GetWorld()->SpawnActor<AActor>(ObstacleClass, SpawnLocation, SpawnRotation));
+	}
+	
 	return RetArray;
 }
 

@@ -20,21 +20,26 @@ void AExpandingObstacle::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bIsExpanding) return;
+	if (!bCanActivate) return;
 
 	Alpha += (ExpandSpeed / MaxExpand) * DeltaTime;
-	if (Alpha >= 1.f) { Alpha = 1.f; ExpandSpeed *= -1; }
-	else if (Alpha <= 0.f) { Alpha = 0.f; ExpandSpeed *= -1; bIsExpanding = false; }
+	if (Alpha >= 1.0f) { Alpha = 1.0f; ExpandSpeed *= -1; }
+	else if (Alpha <= 0.f) { Alpha = 0.f; ExpandSpeed *= -1; bCanActivate = false; }
 
 	float FinalAlpha = CalculateAlpha();
 	RootComponent->SetRelativeScale3D(FMath::Lerp(StartScale, EndScale, FinalAlpha));
 }
 
-void AExpandingObstacle::StartExpand()
+void AExpandingObstacle::ActivateObstacle()
 {
 	Alpha = 0.f;
-	bIsExpanding = true;
+	bCanActivate = true;
 	UE_LOG(LogTemp, Warning, TEXT("StartExpand End"));
+}
+
+bool AExpandingObstacle::CanActivate()
+{
+	return bCanActivate;
 }
 
 float AExpandingObstacle::CalculateAlpha()
@@ -54,9 +59,5 @@ float AExpandingObstacle::CalculateAlpha()
 	return Alpha;
 }
 
-bool AExpandingObstacle::GetIsExpanding()
-{
-	return bIsExpanding;
-}
 
 
