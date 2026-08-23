@@ -7,6 +7,13 @@
 class AFallingObstacle;
 class AExpandingObstacle;
 
+UENUM(BlueprintType)
+enum class EObstacleType : uint8
+{
+	Fall,
+	Expand
+};
+
 UCLASS()
 class WAVEGAME_PROJECT_API AWaveGameState : public AGameState
 {
@@ -34,9 +41,11 @@ public:
 	void OnNextWave();
 	UFUNCTION(BlueprintCallable, Category = "Level")
 	void OnGameOver();
-
-	void OnFall();
-	void OnExpand();
+	void OnOperateObstacle(EObstacleType ObstacleType);
+	/*void OnFall();
+	void OnExpand();*/
+	void SetTimerHandle();
+	void ClearTimerHandle();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
@@ -60,8 +69,11 @@ public:
 	int32 MaxWave = 3;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level|Wave")
 	int32 CurrentWaveIndex = 0;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level|Wave")
+	int32 WaveGoalScore;
 private:
 	FTimerHandle WaveTimerHandle;
+	float WaveDuration = 0.f;
 
 	FTimerHandle FallTimerHandle;
 	float FallDelay = 5.0f;

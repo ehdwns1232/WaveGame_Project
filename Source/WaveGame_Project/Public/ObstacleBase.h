@@ -17,7 +17,9 @@ public:
 protected:
 	UFUNCTION()
 	void OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+public:
+	virtual bool CanActivate();
+	virtual void ActivateObstacle();
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle|Components")
 	USceneComponent* RootScene;
@@ -28,4 +30,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	float HitDamage;
+
+protected:
+	bool bCanActivate = false;
 };
