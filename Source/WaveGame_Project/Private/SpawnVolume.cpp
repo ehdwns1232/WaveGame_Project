@@ -1,6 +1,7 @@
 ﻿#include "SpawnVolume.h"
 #include "Components/BoxComponent.h"
 #include "CoinItem.h"
+#include "MineItem.h"
 
 ASpawnVolume::ASpawnVolume()
 {
@@ -51,9 +52,12 @@ void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
 
 	for (int32 i = 0; i < SpawnCount; ++i)
 	{
+		FVector SpawnLocation = GetRandomPointInVolume(ItemSpawnBox);
+		if (ItemClass->IsChildOf(AMineItem::StaticClass())) SpawnLocation.Z = 0.f;
+
 		GetWorld()->SpawnActor<AActor>(
 			ItemClass,
-			GetRandomPointInVolume(ItemSpawnBox),
+			SpawnLocation,
 			FRotator::ZeroRotator
 		);
 	}
