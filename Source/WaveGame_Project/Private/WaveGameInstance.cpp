@@ -7,12 +7,15 @@ UWaveGameInstance::UWaveGameInstance()
 void UWaveGameInstance::AddToScore(int32 Amount)
 {
 	TotalScore += Amount;
-	UE_LOG(LogTemp, Warning, TEXT("TotalScore : %f"), TotalScore);
 }
 
-float UWaveGameInstance::GetTotalScore() const
+int32 UWaveGameInstance::GetTotalScore() const
 {
 	return TotalScore;
+}
+void UWaveGameInstance::SetTotalScore(int32 Amount)
+{
+	TotalScore = Amount;
 }
 int32 UWaveGameInstance::GetCurrentLevelIndex() const
 {

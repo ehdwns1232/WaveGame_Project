@@ -23,6 +23,11 @@ public:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
 	USphereComponent* ExplosionCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
+	UParticleSystem* ExplosionParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
+	USoundBase* ExplosionSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	float ExplosionDelay;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
@@ -30,6 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	int32 ExplosionDamage;
 
+private:
 	FTimerHandle ExplosionTimerHandle;
-
+	bool bHasExploded;
 };

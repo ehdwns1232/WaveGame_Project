@@ -13,7 +13,6 @@ void AFallingObstacle::ActivateObstacle()
 	StaticMeshComp->SetSimulatePhysics(true);
 	StaticMeshComp->SetEnableGravity(true);
 	bCanActivate = true;
-	UE_LOG(LogTemp, Warning, TEXT("StartFall End"));
 }
 
 bool AFallingObstacle::CanActivate()

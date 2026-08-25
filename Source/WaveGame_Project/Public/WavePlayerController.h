@@ -19,6 +19,17 @@ protected:
 	void BeginPlay() override;
 
 public:
+	UFUNCTION(BlueprintPure, Category = "UI|HUD")
+	UUserWidget* GetHUDWidget() const;
+	UFUNCTION(BlueprintPure, Category = "UI|Menu")
+	UUserWidget* GetMainMenuWidget() const;
+	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
+	void ShowGameHUD();
+	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
+	void ShowMainMenu(bool bIsRestart);
+	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
+	void StartGame();
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* DefaultIMC;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -29,4 +40,15 @@ public:
 	UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|HUD")
+	TSubclassOf<UUserWidget> HUDWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|HUD")
+	UUserWidget* HUDWidgetInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Menu")
+	TSubclassOf<UUserWidget> MainMenuWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|Menu")
+	UUserWidget* MainMenuWidgetInstance;
+
 };

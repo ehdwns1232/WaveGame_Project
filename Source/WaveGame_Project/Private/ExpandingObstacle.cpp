@@ -34,7 +34,6 @@ void AExpandingObstacle::ActivateObstacle()
 {
 	Alpha = 0.f;
 	bCanActivate = true;
-	UE_LOG(LogTemp, Warning, TEXT("StartExpand End"));
 }
 
 bool AExpandingObstacle::CanActivate()

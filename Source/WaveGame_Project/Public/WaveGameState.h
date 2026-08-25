@@ -42,11 +42,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Level")
 	void OnGameOver();
 	void OnOperateObstacle(EObstacleType ObstacleType);
-	/*void OnFall();
-	void OnExpand();*/
+
 	void SetTimerHandle();
 	void ClearTimerHandle();
 
+	void UpdateHUD();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TArray<AFallingObstacle*> FallingObstacles;
@@ -70,8 +70,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level|Wave")
 	int32 CurrentWaveIndex = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level|Wave")
-	int32 WaveGoalScore;
+	int32 WaveGoalScore = 0;
 private:
+	FTimerHandle UpdateHUDTimerHandle;
+
 	FTimerHandle WaveTimerHandle;
 	float WaveDuration = 0.f;
 

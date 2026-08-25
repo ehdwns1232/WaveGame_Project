@@ -35,7 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand")
 	EEasingMode EasingMode = EEasingMode::EaseIn;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Exapand", meta = (ClampMin = 1.0f))
-	float ExpandSpeed = 3.0f;
+	float ExpandSpeed = 10.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand", meta = (ClampMin = 1.0f))
 	float MaxExpand = 10.0f;
 
