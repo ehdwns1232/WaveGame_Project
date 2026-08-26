@@ -151,9 +151,9 @@ void ABaseItem::DestroyItem()
 	Destroy();
 }
 
-FName ABaseItem::GetItemType() const
+FName ABaseItem::GetItemName() const
 {
-	return ItemType;
+	return ItemName;
 }
 
 void ABaseItem::ApplyNameWidget()
@@ -165,7 +165,7 @@ void ABaseItem::ApplyNameWidget()
 
 	if (UTextBlock* NameText = Cast<UTextBlock>(ItemWidgetInstance->GetWidgetFromName(TEXT("Name"))))
 	{
-		NameText->SetText(FText::FromName(ItemType));
+		NameText->SetText(FText::FromName(ItemName));
 	}
 	if (UImage* Image = Cast<UImage>(ItemWidgetInstance->GetWidgetFromName(TEXT("ItemIcon"))))
 	{

@@ -4,8 +4,7 @@
 
 ACoinItem::ACoinItem()
 {
-	ItemType = "DefaultCoin";
-	PointValue = 0;
+	ItemName = "DefaultCoin";
 }
 
 void ACoinItem::ActivateItem(AActor* Activator)

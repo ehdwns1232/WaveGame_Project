@@ -2,7 +2,7 @@
 
 ASmallCoinItem::ASmallCoinItem()
 {
-	ItemType = "SmallCoin";
+	ItemName = "SmallCoin";
 	PointValue = 10;
 }
 

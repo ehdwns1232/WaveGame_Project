@@ -36,7 +36,7 @@ public:
 		int32 OtherBodyIndex);
 	virtual void ActivateItem(AActor* Activator);
 	virtual void DestroyItem();
-	FName GetItemType() const;
+	FName GetItemName() const;
 
 	void ApplyNameWidget();
 	UFUNCTION()
@@ -45,22 +45,22 @@ public:
 	void OnItemWidgetEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
-	USceneComponent* Scene;
+	TObjectPtr<USceneComponent> Scene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
-	USphereComponent* SphereCollision;
+	TObjectPtr<USphereComponent> SphereCollision;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
-	UStaticMeshComponent* StaticMesh;
+	TObjectPtr<UStaticMeshComponent> StaticMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
-	USphereComponent* ItemWidgetCollision;
+	TObjectPtr<USphereComponent> ItemWidgetCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	UWidgetComponent* ItemWidget;
+	TObjectPtr<UWidgetComponent> ItemWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	UTexture2D* ItemIcon;
+	TObjectPtr<UTexture2D> ItemIcon;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	UParticleSystem* PickupParticle;
+	TObjectPtr<UParticleSystem> PickupParticle;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	USoundBase* PickupSound;
+	TObjectPtr<USoundBase> PickupSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	FName ItemType;
+	FName ItemName;
 };

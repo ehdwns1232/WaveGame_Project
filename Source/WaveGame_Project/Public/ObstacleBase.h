@@ -22,14 +22,14 @@ public:
 	virtual void ActivateObstacle();
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle|Components")
-	USceneComponent* RootScene;
+	TObjectPtr<USceneComponent> RootScene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle|Components")
-	UBoxComponent* BoxCollision;
+	TObjectPtr<UBoxComponent> BoxCollision;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle|Components")
-	UStaticMeshComponent* StaticMeshComp;
+	TObjectPtr<UStaticMeshComponent> StaticMeshComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float HitDamage;
+	float HitDamage = 30.0f;
 
 protected:
 	bool bCanActivate = false;

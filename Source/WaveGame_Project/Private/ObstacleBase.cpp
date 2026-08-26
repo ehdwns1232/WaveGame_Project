@@ -23,8 +23,6 @@ AObstacleBase::AObstacleBase()
 	StaticMeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 
 	BoxCollision->OnComponentHit.AddDynamic(this, &AObstacleBase::OnObstacleHit);
-
-	HitDamage = 30.0f;
 }
 
 bool AObstacleBase::CanActivate()

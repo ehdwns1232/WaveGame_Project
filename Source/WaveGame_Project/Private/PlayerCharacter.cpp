@@ -17,25 +17,16 @@ APlayerCharacter::APlayerCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp);
 	CameraComp->bUsePawnControlRotation = false;
-
-	NormalSpeed = 600.0f;
-	SpeedMultipiler = 1.7f;
-	SprintSpeed = NormalSpeed * SpeedMultipiler;
-
-	MaxHealth = 100.0f;
-	Health = MaxHealth;
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -87,7 +78,10 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	if (!Controller) return;
 
-	const FVector2D MoveInput = Value.Get<FVector2D>();
+	FVector2D MoveInput = Value.Get<FVector2D>();
+	
+	if (CurrentPlayerState & static_cast<uint8>(EPlayerDebuffState::Reverse)) MoveInput *= -1;
+	
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
 		AddMovementInput(GetActorForwardVector(), MoveInput.X);
@@ -144,9 +138,105 @@ void APlayerCharacter::AddHealth(float Amount)
 	Health = FMath::Clamp(Health + Amount, 0.0f, MaxHealth);
 }
 
+
+
 void APlayerCharacter::OnDeath()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Player Dead"));
 	// 게임종료 로직
+}
+
+void APlayerCharacter::AddSlowStack(float SlowTime)
+{
+	SlowStack++;
+	
+	if (SlowStack == 1)
+	{
+		ApplySlow();
+		FTimerDelegate Delegate;
+		Delegate.BindUObject(this, &APlayerCharacter::MaintainSlow, SlowTime);
+		GetWorldTimerManager().SetTimer(SlowTimerHandle, Delegate, SlowTime, false);
+	}
+}
+
+void APlayerCharacter::AddReverseStack(float ReverseTime)
+{
+	ReverseStack++;
+
+	if (ReverseStack == 1)
+	{
+		AddPlayerDebuffState(EPlayerDebuffState::Reverse);
+		FTimerDelegate Delegate;
+		Delegate.BindUObject(this, &APlayerCharacter::MaintainReverse, ReverseTime);
+		GetWorldTimerManager().SetTimer(ReverseTimerHandle, Delegate, ReverseTime, false);
+	}
+}
+
+void APlayerCharacter::ApplySlow()
+{
+	AddPlayerDebuffState(EPlayerDebuffState::Slow);
+	if (UCharacterMovementComponent* CharacterMovementComp = GetCharacterMovement())
+	{
+		CharacterMovementComp->MaxWalkSpeed = NormalSpeed / SlowDivideValue;
+		SetSprintSpeed(CharacterMovementComp->MaxWalkSpeed);
+	}
+}
+
+void APlayerCharacter::RemoveSlow()
+{
+	RemovePlayerDebuffState(EPlayerDebuffState::Slow);
+	if (UCharacterMovementComponent* CharacterMovementComp = GetCharacterMovement())
+	{
+		CharacterMovementComp->MaxWalkSpeed = NormalSpeed;
+		SetSprintSpeed(CharacterMovementComp->MaxWalkSpeed);
+	}
+}
+
+void APlayerCharacter::MaintainSlow(float SlowTime)
+{
+	SlowStack--;
+
+	if (SlowStack > 0)
+	{
+		FTimerDelegate Delegate;
+		Delegate.BindUObject(this, &APlayerCharacter::MaintainSlow, SlowTime);
+		GetWorldTimerManager().SetTimer(SlowTimerHandle, Delegate, SlowTime, false);
+	}
+	else
+	{
+		RemoveSlow();
+	}
+}
+
+void APlayerCharacter::AddPlayerDebuffState(EPlayerDebuffState NewState)
+{
+	CurrentPlayerState |= static_cast<uint8>(NewState);
+}
+
+void APlayerCharacter::RemovePlayerDebuffState(EPlayerDebuffState RemoveState)
+{
+	CurrentPlayerState &= ~static_cast<uint8>(RemoveState);
+}
+
+void APlayerCharacter::MaintainReverse(float ReverseTime)
+{
+	ReverseStack--;
+
+	if (ReverseStack > 0)
+	{
+		FTimerDelegate Delegate;
+		Delegate.BindUObject(this, &APlayerCharacter::MaintainReverse, ReverseTime);
+		GetWorldTimerManager().SetTimer(ReverseTimerHandle, Delegate, ReverseTime, false);
+	}
+	else
+	{
+		RemovePlayerDebuffState(EPlayerDebuffState::Reverse);
+	}
+}
+
+void APlayerCharacter::SetSprintSpeed(float NewSpeed)
+{
+	// 최소값 설정
+	SprintSpeed = FMath::Max(NewSpeed * 1.5, NewSpeed * SpeedMultipiler);
 }
 

@@ -23,16 +23,16 @@ public:
 
 public:
 	FVector GetRandomPointInVolume(UBoxComponent* Box) const;
-	void SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount);
+	TArray<AActor*> SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount);
 	TArray<AActor*> SpawnObstacleSide(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
 	TArray<AActor*> SpawnObstacleTop(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	USceneComponent* RootScene;
+	TObjectPtr<USceneComponent> RootScene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UBoxComponent* ItemSpawnBox;
+	TObjectPtr<UBoxComponent> ItemSpawnBox;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UBoxComponent* ObstacleTopSpawnBox;
+	TObjectPtr<UBoxComponent> ObstacleTopSpawnBox;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UBoxComponent* ObstacleSideSpawnBox;
+	TObjectPtr<UBoxComponent> ObstacleSideSpawnBox;
 };

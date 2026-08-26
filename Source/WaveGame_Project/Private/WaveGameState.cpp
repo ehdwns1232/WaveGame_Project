@@ -9,6 +9,7 @@
 #include "WavePlayerController.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/UserWidget.h"
+#include "PlayerCharacter.h"
 
 AWaveGameState::AWaveGameState()
 {
@@ -71,25 +72,19 @@ void AWaveGameState::OnCoinCollected()
 
 void AWaveGameState::DestroyAllSpawned()
 {
-	TArray<AActor*> SpawnedItems;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseItem::StaticClass(), SpawnedItems);
-
-	if (SpawnedItems.Num() > 0)
+	for (AActor* Actor : AllItems)
 	{
-		for (AActor* Actor : SpawnedItems)
-		{
-			if (Actor) Actor->Destroy();
-		}
+		if (Actor) Actor->Destroy();
 	}
 
-	TArray<AActor*> SpawnedObstacles;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AObstacleBase::StaticClass(), SpawnedObstacles);
-	if (SpawnedObstacles.Num() > 0)
+	for (AActor* Actor : FallingObstacles)
 	{
-		for (AActor* Actor : SpawnedObstacles)
-		{
-			if (Actor) Actor->Destroy();
-		}
+		if (Actor) Actor->Destroy();
+	}
+
+	for (AActor* Actor : ExpandingObstacles)
+	{
+		if (Actor) Actor->Destroy();
 	}
 }
 
@@ -158,7 +153,12 @@ void AWaveGameState::StartWave()
 			
 			if (ActualClass->IsChildOf(ABaseItem::StaticClass()))
 			{
-				SpawnVolume->SpawnItem(ActualClass, SpawnItemInfo.SpawnCount);
+				TempArray = SpawnVolume->SpawnItem(ActualClass, SpawnItemInfo.SpawnCount);
+				for (AActor* Actor : TempArray)
+				{
+					AllItems.Add(Cast<ABaseItem>(Actor));
+				}
+
 				if (ActualClass->IsChildOf(ACoinItem::StaticClass()))
 				{
 					SpawnedCoinCount += SpawnItemInfo.SpawnCount;
@@ -279,22 +279,27 @@ void AWaveGameState::UpdateHUD()
 					float RemainingTime = GetWorldTimerManager().GetTimerRemaining(WaveTimerHandle);
 					TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time : %.1f"), FMath::Max(0.f, RemainingTime))));
 				}
+
 				if (UTextBlock* LevelText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
 				{
 					LevelText->SetText(FText::FromString(FString::Printf(TEXT("Level : %d"), CurrentLevelIndex + 1)));
 				}
+
 				if (UTextBlock* WaveText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Wave"))))
 				{
 					WaveText->SetText(FText::FromString(FString::Printf(TEXT("Wave : %d"), CurrentWaveIndex + 1)));
 				}
+
 				if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
 				{
 					ScoreText->SetText(FText::FromString(FString::Printf(TEXT("Score : %d"), Score)));
 				}
+
 				if (UTextBlock* GoalScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("GoalScore"))))
 				{
 					GoalScoreText->SetText(FText::FromString(FString::Printf(TEXT("GoalScore : %d"), WaveGoalScore)));
 				}
+
 				if (UTextBlock* TotalScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("TotalScore"))))
 				{
 					UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
@@ -303,10 +308,19 @@ void AWaveGameState::UpdateHUD()
 					int32 TotalScore = WaveGameInstance->GetTotalScore();
 					TotalScoreText->SetText(FText::FromString(FString::Printf(TEXT("TotalScore : %d"), TotalScore)));
 				}
-				if (UTextBlock* SpawnedCoinCountText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("SpawnedCoinCount"))))
+
+				if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
 				{
-					SpawnedCoinCountText->SetText(FText::FromString(FString::Printf(TEXT("SpawnedCoinCount : %d"), SpawnedCoinCount)));
+					if (UTextBlock* PlayerSlowStack = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("PlayerSlowStack"))))
+					{
+						PlayerSlowStack->SetText(FText::FromString(FString::Printf(TEXT("PlayerSlowStack : %d"), PlayerCharacter->SlowStack)));
+					}
+					if (UTextBlock* PlayerReverseStack = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("PlayerReverseStack"))))
+					{
+						PlayerReverseStack->SetText(FText::FromString(FString::Printf(TEXT("PlayerReverseStack : %d"), PlayerCharacter->ReverseStack)));
+					}
 				}
+				
 				if (UTextBlock* RemainingCoinCountText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("RemainingCoinCount"))))
 				{
 					RemainingCoinCountText->SetText(FText::FromString(FString::Printf(TEXT("RemainingCoinCount : %d"), SpawnedCoinCount - CollectedCoinCount)));

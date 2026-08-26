@@ -31,24 +31,24 @@ public:
 	void StartGame();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputMappingContext* DefaultIMC;
+	TObjectPtr<UInputMappingContext> DefaultIMC;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* SprintAction;
+	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|HUD")
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|HUD")
-	UUserWidget* HUDWidgetInstance;
+	TObjectPtr<UUserWidget> HUDWidgetInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Menu")
 	TSubclassOf<UUserWidget> MainMenuWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|Menu")
-	UUserWidget* MainMenuWidgetInstance;
+	TObjectPtr<UUserWidget> MainMenuWidgetInstance;
 
 };

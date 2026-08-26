@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FSpawnInfoPair> SpawnItemInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WaveDuration;
+	float WaveDuration = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 GoalScore;
+	int32 GoalScore = 0;
 };

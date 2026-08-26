@@ -2,8 +2,8 @@
 
 ABigCoinItem::ABigCoinItem()
 {
-	ItemType = "BigCoin";
-	PointValue = 50;
+	ItemName = "BigCoin";
+	PointValue = 20;
 }
 
 void ABigCoinItem::ActivateItem(AActor* Activator)

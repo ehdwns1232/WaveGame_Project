@@ -46,9 +46,10 @@ FVector ASpawnVolume::GetRandomPointInVolume(UBoxComponent* Box) const
 		FMath::FRandRange(FMath::Max(0.f, -BoxExtent.Z), BoxExtent.Z));
 }
 
-void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
+TArray<AActor*> ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
 {
-	if (!ItemClass || SpawnCount <= 0) return;
+	TArray<AActor*> RetArray;
+	if (!ItemClass || SpawnCount <= 0) return RetArray;
 
 	for (int32 i = 0; i < SpawnCount; ++i)
 	{
@@ -61,6 +62,8 @@ void ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount)
 			FRotator::ZeroRotator
 		);
 	}
+
+	return RetArray;
 }
 
 TArray<AActor*> ASpawnVolume::SpawnObstacleSide(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount)
