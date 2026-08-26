@@ -5,11 +5,7 @@
 
 AMineItem::AMineItem()
 {
-	ItemType = "Mine";
-	ExplosionDelay = 3.0f;
-	ExplosionRadius = 300.0f;
-	ExplosionDamage = 30;
-	bHasExploded = false;
+	ItemName = "Mine";
 
 	ExplosionCollision = CreateDefaultSubobject<USphereComponent>(TEXT("ExplosionCollision"));
 	ExplosionCollision->InitSphereRadius(ExplosionRadius);

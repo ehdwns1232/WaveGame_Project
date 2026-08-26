@@ -22,20 +22,20 @@ public:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
-	USphereComponent* ExplosionCollision;
+	TObjectPtr<USphereComponent> ExplosionCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	UParticleSystem* ExplosionParticle;
+	TObjectPtr<UParticleSystem> ExplosionParticle;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	USoundBase* ExplosionSound;
+	TObjectPtr<USoundBase> ExplosionSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	float ExplosionDelay;
+	float ExplosionDelay = 2.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	float ExplosionRadius;
+	float ExplosionRadius = 300.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 ExplosionDamage;
+	int32 ExplosionDamage = 30;
 
 private:
 	FTimerHandle ExplosionTimerHandle;
-	bool bHasExploded;
+	bool bHasExploded = false;
 };

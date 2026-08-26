@@ -11,5 +11,7 @@ public class WaveGame_Project : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
+
+		PublicIncludePaths.AddRange(new string[] { "WaveGame_Project" });
 	}
 }

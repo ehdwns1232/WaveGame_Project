@@ -3,8 +3,7 @@
 
 AHealingItem::AHealingItem()
 {
-	ItemType = "Healing";
-	HealAmount = 20;
+	ItemName = "Healing";
 }
 
 void AHealingItem::ActivateItem(AActor* Activator)

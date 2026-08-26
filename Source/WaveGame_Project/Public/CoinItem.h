@@ -17,5 +17,5 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 PointValue;
+	int32 PointValue = 0;
 };

@@ -8,6 +8,15 @@ class USpringArmComponent;
 class UCameraComponent;
 struct FInputActionValue;
 
+UENUM(BlueprintType)
+enum class EPlayerDebuffState : uint8
+{
+	None = 0 UMETA(DisplayName = "None"),
+	Slow = 1 UMETA(DisplayName = "Slow"),
+	Reverse = 2 UMETA(DisplayName = "Reserve"),
+	SlowAndReverse = 4 UMETA(DisplayName = "SlowAndReserve")
+};
+
 UCLASS()
 class WAVEGAME_PROJECT_API APlayerCharacter : public ACharacter
 {
@@ -30,10 +39,17 @@ public:
 	float GetHeath() const;
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void AddHealth(float Amount);
-
-public:
+	
 	void OnDeath();
-
+	void AddSlowStack(float SlowTime);
+	void AddReverseStack(float ReverseTime);
+	void ApplySlow();
+	void RemoveSlow();
+	void MaintainSlow(float SlowTime);
+	void AddPlayerDebuffState(EPlayerDebuffState NewState);
+	void RemovPlayerDebuffState(EPlayerDebuffState RemoveState);
+	void MaintainReverse(float ReverseTime);
+	void SetSprintSpeed(float NewSpeed);
 public:
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
@@ -50,18 +66,31 @@ public:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArmComp;
+	TObjectPtr<USpringArmComponent> SpringArmComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* CameraComp;
+	TObjectPtr<UCameraComponent> CameraComp;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float MaxHealth;
+	float MaxHealth = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float Health;
+	float Health = MaxHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	int32 SlowStack = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff", meta = (ClampMin = "1.5"))
+	float SlowDivideValue = 2.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	int32 ReverseStack = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debuff")
+	bool bIsReverseDir = false;
 
 private:
-	float NormalSpeed;
-	float SpeedMultipiler;
-	float SprintSpeed;
+	FTimerHandle SlowTimerHandle;
+	FTimerHandle ReverseTimerHandle;
+
+	uint8 CurrentPlayerState = static_cast<uint8>(EPlayerDebuffState::None);
+	float NormalSpeed = 600.0f;
+	float SpeedMultipiler = 1.7f;
+	float SprintSpeed = NormalSpeed * SpeedMultipiler;
 };

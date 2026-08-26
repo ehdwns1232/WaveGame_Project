@@ -23,7 +23,7 @@ public:
 	UDataTable* GetCurrentTable() const;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LevelTable")
-	TArray<UDataTable*> LevelTables;
+	TArray<TObjectPtr<UDataTable>> LevelTables;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GameData")
 	int32 TotalScore = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GameData")

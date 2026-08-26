@@ -4,6 +4,7 @@
 #include "GameFramework/GameState.h"
 #include "WaveGameState.generated.h"
 
+class ABaseItem;
 class AFallingObstacle;
 class AExpandingObstacle;
 
@@ -49,9 +50,11 @@ public:
 	void UpdateHUD();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
-	TArray<AFallingObstacle*> FallingObstacles;
+	TArray<TObjectPtr<ABaseItem>> AllItems;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
-	TArray<AExpandingObstacle*> ExpandingObstacles;
+	TArray<TObjectPtr<AFallingObstacle>> FallingObstacles;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
+	TArray<TObjectPtr<AExpandingObstacle>> ExpandingObstacles;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
 	int32 Score = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Coin")

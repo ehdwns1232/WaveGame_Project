@@ -17,5 +17,5 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 HealAmount;
+	int32 HealAmount = 20;
 };
