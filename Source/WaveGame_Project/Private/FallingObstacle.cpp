@@ -1,4 +1,5 @@
 ﻿#include "FallingObstacle.h"
+#include "Kismet/GameplayStatics.h"
 
 AFallingObstacle::AFallingObstacle()
 {
@@ -6,6 +7,8 @@ AFallingObstacle::AFallingObstacle()
 	StaticMeshComp->SetSimulatePhysics(false);
 	StaticMeshComp->SetEnableGravity(false);
 	StaticMeshComp->SetMobility(EComponentMobility::Movable);
+
+	HitParticle = nullptr;
 }
 
 void AFallingObstacle::ActivateObstacle()
@@ -15,10 +18,32 @@ void AFallingObstacle::ActivateObstacle()
 	bCanActivate = true;
 }
 
-bool AFallingObstacle::CanActivate()
+void AFallingObstacle::BeginPlay()
 {
-	return bCanActivate;
+	Super::BeginPlay();
+
+	TWeakObjectPtr<AFallingObstacle> WeakPtr = this;
+	GetWorldTimerManager().SetTimer(FallTimerHandle, [WeakPtr]() { if (WeakPtr.IsValid()) { if (WeakPtr.Get()->bFallImmediately)WeakPtr->ActivateObstacle(); } }, 0.1f, false);
 }
+
+void AFallingObstacle::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(FallTimerHandle);
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void AFallingObstacle::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!bCanApplyDamage) return;
+
+	Super::OnObstacleHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+	if (HitParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, HitComponent->GetComponentLocation(), HitComponent->GetComponentRotation(), true);
+	}
+}
+
 
 
 

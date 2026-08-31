@@ -24,11 +24,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 public:
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void ActivateObstacle() override;
-	virtual bool CanActivate() override;
 	float CalculateAlpha();
 
 public:
@@ -38,6 +38,10 @@ public:
 	float ExpandSpeed = 10.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expand", meta = (ClampMin = 1.0f))
 	float MaxExpand = 10.0f;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PushPower")
+	float PushPower = 1000.0f;
 
 private:
 	float Alpha = 0.0f;

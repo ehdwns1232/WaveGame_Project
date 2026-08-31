@@ -9,23 +9,23 @@ AObstacleBase::AObstacleBase()
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(RootScene);
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CapsuleCollision"));
-	BoxCollision->SetupAttachment(RootScene);
-	BoxCollision->SetNotifyRigidBodyCollision(true);
-	BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	BoxCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
-	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	StaticMeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	StaticMeshComp->SetupAttachment(RootScene);
 	StaticMeshComp->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	StaticMeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CapsuleCollision"));
+	BoxCollision->SetupAttachment(StaticMeshComp);
+	BoxCollision->SetNotifyRigidBodyCollision(true);
+	BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	BoxCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+
 	BoxCollision->OnComponentHit.AddDynamic(this, &AObstacleBase::OnObstacleHit);
 }
 
-bool AObstacleBase::CanActivate()
+bool AObstacleBase::GetCanActivate()
 {
 	return bCanActivate;
 }
@@ -35,9 +35,12 @@ void AObstacleBase::ActivateObstacle()
 
 void AObstacleBase::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor && OtherActor->ActorHasTag(FName(TEXT("Player"))))
+	if (bCanApplyDamage && OtherActor && OtherActor->ActorHasTag(FName(TEXT("Player"))))
 	{
+		bCanApplyDamage = false;
 		UGameplayStatics::ApplyDamage(OtherActor, HitDamage, nullptr, this, UDamageType::StaticClass());
+		TWeakObjectPtr<AObstacleBase> WeakPtr = this;
+		GetWorldTimerManager().SetTimer(ResetApplyDamageTimerHandle, [WeakPtr]() { if (WeakPtr.IsValid()){ WeakPtr.Get()->bCanApplyDamage = true; } }, 1.2f, false);
 	}
 }
 

@@ -1,11 +1,10 @@
 ﻿#include "BaseItem.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MineItem.h"
-#include "Components/Image.h"
+#include "UI/ItemWidget.h"
 #include "Particles/ParticleSystemComponent.h"
 
 ABaseItem::ABaseItem()
@@ -24,11 +23,11 @@ ABaseItem::ABaseItem()
 
 	ItemWidgetCollision = CreateDefaultSubobject<USphereComponent>(TEXT("NameRotationCollision"));
 	ItemWidgetCollision->SetupAttachment(Scene);
-	SphereCollision->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	ItemWidgetCollision->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
-	ItemWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameWidget"));
-	ItemWidget->SetupAttachment(StaticMesh);
-	ItemWidget->SetWidgetSpace(EWidgetSpace::World);
+	ItemWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ItemWidgetComponent"));
+	ItemWidgetComp->SetupAttachment(Scene);
+	ItemWidgetComp->SetWidgetSpace(EWidgetSpace::World);
 
 	SphereCollision->OnComponentBeginOverlap.AddDynamic(this, &ABaseItem::OnItemOverlap);
 	SphereCollision->OnComponentEndOverlap.AddDynamic(this, &ABaseItem::OnItemEndOverlap);
@@ -40,11 +39,11 @@ ABaseItem::ABaseItem()
 void ABaseItem::BeginPlay()
 {
 	Super::BeginPlay();
-	if (ItemWidget)
+	if (ItemWidgetComp)
 	{
-		ItemWidget->SetVisibility(false);
+		ItemWidgetComp->SetVisibility(false);
 		SetActorTickEnabled(false);
-		ApplyNameWidget();
+		ApplyItemWidget();
 	}
 
 	// 타이머를 안하고 체크시 Player가 없는 상황이 생겨서 타이머 활용했음 
@@ -67,9 +66,9 @@ void ABaseItem::BeginPlay()
 			{
 				if (Actor && Actor->ActorHasTag("Player"))
 				{
-					Item->ItemWidget->SetVisibility(true);
+					Item->ItemWidgetComp->SetVisibility(true);
 					Item->SetActorTickEnabled(true);
-					
+					Item->bIsNearPlayer = true;
 					break;
 				}
 			}
@@ -81,16 +80,20 @@ void ABaseItem::BeginPlay()
 void ABaseItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0))
+
+	if (bIsNearPlayer)
 	{
-		if (!ItemWidget) return;
-		
-		FVector CameraLocation = CameraManager->GetCameraLocation();
-		FVector WidgetLocation = ItemWidget->GetComponentLocation();
+		if (APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0))
+		{
+			if (!ItemWidgetComp) return;
 
-		FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(WidgetLocation, CameraLocation);
+			FVector CameraLocation = CameraManager->GetCameraLocation();
+			FVector WidgetLocation = ItemWidgetComp->GetComponentLocation();
 
-		ItemWidget->SetWorldRotation(LookAtRotation);
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(WidgetLocation, CameraLocation);
+
+			ItemWidgetComp->SetWorldRotation(LookAtRotation);
+		}
 	}
 }
 
@@ -121,7 +124,7 @@ void ABaseItem::ActivateItem(AActor* Activator)
 			true
 		);
 	}
-
+	
 	if (PickupSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
@@ -133,12 +136,16 @@ void ABaseItem::ActivateItem(AActor* Activator)
 
 	if (Particle)
 	{
+		TWeakObjectPtr<UParticleSystemComponent> WeakPtr = Particle;
 		FTimerHandle DestroyParticleTimerHandle;
 		GetWorldTimerManager().SetTimer(
 			DestroyParticleTimerHandle,
-			[Particle]()
+			[WeakPtr]()
 			{
-				Particle->DestroyComponent();
+				if (WeakPtr.IsValid())
+				{
+					WeakPtr.Get()->DestroyComponent();
+				}
 			},
 			2.0f,
 			false
@@ -156,23 +163,13 @@ FName ABaseItem::GetItemName() const
 	return ItemName;
 }
 
-void ABaseItem::ApplyNameWidget()
+void ABaseItem::ApplyItemWidget()
 {
-	if (!ItemWidget) return;
+	if (!ItemWidgetComp) return;
 
-	UUserWidget* ItemWidgetInstance = ItemWidget->GetUserWidgetObject();
-	if (!ItemWidgetInstance) return;
-
-	if (UTextBlock* NameText = Cast<UTextBlock>(ItemWidgetInstance->GetWidgetFromName(TEXT("Name"))))
+	if (UItemWidget* ItemWidget = Cast<UItemWidget>(ItemWidgetComp->GetUserWidgetObject()))
 	{
-		NameText->SetText(FText::FromName(ItemName));
-	}
-	if (UImage* Image = Cast<UImage>(ItemWidgetInstance->GetWidgetFromName(TEXT("ItemIcon"))))
-	{
-		if (ItemIcon)
-		{
-			Image->SetBrushFromTexture(ItemIcon);
-		}
+		ItemWidget->SetItemInfo(ItemName, ItemIcon);
 	}
 }
 
@@ -180,9 +177,10 @@ void ABaseItem::OnItemWidgetOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 {
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-		if (!ItemWidget) return;
+		if (!ItemWidgetComp) return;
 
-		ItemWidget->SetVisibility(true);
+		bIsNearPlayer = true;
+		ItemWidgetComp->SetVisibility(true);
 		SetActorTickEnabled(true);
 	}
 }
@@ -191,9 +189,10 @@ void ABaseItem::OnItemWidgetEndOverlap(UPrimitiveComponent* OverlappedComp, AAct
 {
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-		if (!ItemWidget) return;
+		if (!ItemWidgetComp) return;
 
-		ItemWidget->SetVisibility(false);
+		bIsNearPlayer = false;
+		ItemWidgetComp->SetVisibility(false);
 		SetActorTickEnabled(false);
 	}
 }

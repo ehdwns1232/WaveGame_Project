@@ -4,6 +4,9 @@
 #include "Engine/GameInstance.h"
 #include "WaveGameInstance.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTotalScoreChanged, int32, TotalScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelChanged, int32, CurLevel);
+
 UCLASS()
 class WAVEGAME_PROJECT_API UWaveGameInstance : public UGameInstance
 {
@@ -29,4 +32,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GameData")
 	int32 CurrentLevelIndex = 0;
 
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnTotalScoreChanged OnTotalScoreChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnLevelChanged OnLevelChanged;
 };
