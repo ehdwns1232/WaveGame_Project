@@ -7,6 +7,8 @@ UWaveGameInstance::UWaveGameInstance()
 void UWaveGameInstance::AddToScore(int32 Amount)
 {
 	TotalScore += Amount;
+
+	OnTotalScoreChanged.Broadcast(TotalScore);
 }
 
 int32 UWaveGameInstance::GetTotalScore() const
@@ -16,6 +18,8 @@ int32 UWaveGameInstance::GetTotalScore() const
 void UWaveGameInstance::SetTotalScore(int32 Amount)
 {
 	TotalScore = Amount;
+
+	OnTotalScoreChanged.Broadcast(TotalScore);
 }
 int32 UWaveGameInstance::GetCurrentLevelIndex() const
 {
@@ -24,6 +28,8 @@ int32 UWaveGameInstance::GetCurrentLevelIndex() const
 void UWaveGameInstance::SetCurrentLevelIndex(int32 NewCurrentLevelIndex)
 {
 	CurrentLevelIndex = NewCurrentLevelIndex;
+
+	OnLevelChanged.Broadcast(CurrentLevelIndex + 1);
 }
 
 UDataTable* UWaveGameInstance::GetCurrentTable() const

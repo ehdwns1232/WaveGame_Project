@@ -6,6 +6,8 @@
 
 class UInputMappingContext;
 class UInputAction;
+class UHUDWidget;
+class UMainMenuWidget;
 
 UCLASS()
 class WAVEGAME_PROJECT_API AWavePlayerController : public APlayerController
@@ -20,9 +22,9 @@ protected:
 
 public:
 	UFUNCTION(BlueprintPure, Category = "UI|HUD")
-	UUserWidget* GetHUDWidget() const;
+	UHUDWidget* GetHUDWidget() const;
 	UFUNCTION(BlueprintPure, Category = "UI|Menu")
-	UUserWidget* GetMainMenuWidget() const;
+	UMainMenuWidget* GetMainMenuWidget() const;
 	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
 	void ShowGameHUD();
 	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
@@ -42,13 +44,14 @@ public:
 	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|HUD")
-	TSubclassOf<UUserWidget> HUDWidgetClass;
+	TSubclassOf<UHUDWidget> HUDWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|HUD")
-	TObjectPtr<UUserWidget> HUDWidgetInstance;
+	TObjectPtr<UHUDWidget> HUDWidgetInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Menu")
-	TSubclassOf<UUserWidget> MainMenuWidgetClass;
+	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|Menu")
-	TObjectPtr<UUserWidget> MainMenuWidgetInstance;
+	TObjectPtr<UMainMenuWidget> MainMenuWidgetInstance;
+	
 
 };

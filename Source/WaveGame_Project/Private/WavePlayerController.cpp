@@ -2,8 +2,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "WaveGameInstance.h"
 #include "Blueprint/UserWidget.h"
-#include "WaveGameState.h"
-#include "Components/TextBlock.h"
+#include "UI/MainMenuWidget.h"
+#include "UI/HUDWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 AWavePlayerController::AWavePlayerController()
@@ -38,12 +38,12 @@ void AWavePlayerController::BeginPlay()
 	}
 }
 
-UUserWidget* AWavePlayerController::GetHUDWidget() const
+UHUDWidget* AWavePlayerController::GetHUDWidget() const
 {
 	return HUDWidgetInstance;
 }
 
-UUserWidget* AWavePlayerController::GetMainMenuWidget() const
+UMainMenuWidget* AWavePlayerController::GetMainMenuWidget() const
 {
 	return MainMenuWidgetInstance;
 }
@@ -53,29 +53,24 @@ void AWavePlayerController::ShowGameHUD()
 	if (HUDWidgetInstance)
 	{
 		HUDWidgetInstance->RemoveFromParent();
-		HUDWidgetClass = nullptr;
+		HUDWidgetInstance = nullptr;
 	}
 
 	if (MainMenuWidgetInstance)
 	{
 		MainMenuWidgetInstance->RemoveFromParent();
-		MainMenuWidgetClass = nullptr;
+		MainMenuWidgetInstance = nullptr;
 	}
 
 	if (HUDWidgetClass)
 	{
-		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+		HUDWidgetInstance = CreateWidget<UHUDWidget>(this, HUDWidgetClass);
 		if (HUDWidgetInstance)
 		{
 			HUDWidgetInstance->AddToViewport();
 			bShowMouseCursor = false;
 			SetInputMode(FInputModeGameOnly());
 		}
-	}
-
-	if (AWaveGameState* WaveGameState = Cast<AWaveGameState>(GetWorld()->GetGameState()))
-	{
-		WaveGameState->UpdateHUD();
 	}
 }
 
@@ -95,43 +90,13 @@ void AWavePlayerController::ShowMainMenu(bool bIsRestart)
 
 	if (MainMenuWidgetClass)
 	{
-		MainMenuWidgetInstance = CreateWidget<UUserWidget>(this, MainMenuWidgetClass);
+		MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(this, MainMenuWidgetClass);
 		if (!MainMenuWidgetInstance) return;
 		
 		MainMenuWidgetInstance->AddToViewport();
-
 		bShowMouseCursor = true;
 		SetInputMode(FInputModeUIOnly());
-		
-		if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButtonText"))))
-		{
-			if (bIsRestart)
-			{
-				ButtonText->SetText(FText::FromString(TEXT("RESTART")));
-			}
-			else
-			{
-				ButtonText->SetText(FText::FromString(TEXT("START")));
-			}
-		}
-
-		if (bIsRestart)
-		{
-			UFunction* PlayAnimFunc = MainMenuWidgetInstance->FindFunction(FName("PlayGameOverAnim"));
-			if (PlayAnimFunc)
-			{
-				MainMenuWidgetInstance->ProcessEvent(PlayAnimFunc, nullptr);
-			}
-
-			if (UTextBlock* TotalScoreText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("TotalScoreText"))))
-			{
-				if (UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetWorld()->GetGameInstance()))
-				{
-					int32 TotalScore = WaveGameInstance->GetTotalScore();
-					TotalScoreText->SetText(FText::FromString(FString::Printf(TEXT("TotalScore : %d"), TotalScore)));
-				}
-			}
-		}
+		MainMenuWidgetInstance->UpdateMenuState(bIsRestart);
 	}
 }
 
@@ -144,4 +109,5 @@ void AWavePlayerController::StartGame()
 	}
 
 	UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel"));
+	SetPause(false);
 }

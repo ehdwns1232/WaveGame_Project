@@ -7,8 +7,6 @@
 #include "FallingObstacle.h"
 #include "ExpandingObstacle.h"
 #include "WavePlayerController.h"
-#include "Components/TextBlock.h"
-#include "Blueprint/UserWidget.h"
 #include "PlayerCharacter.h"
 
 AWaveGameState::AWaveGameState()
@@ -21,8 +19,6 @@ void AWaveGameState::BeginPlay()
 	Super::BeginPlay();
 
 	StartLevel();
-
-	GetWorldTimerManager().SetTimer(UpdateHUDTimerHandle, this, &AWaveGameState::UpdateHUD, 0.1f, true);
 }
 
 void AWaveGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -37,6 +33,11 @@ int32 AWaveGameState::GetScore() const
 	return Score;
 }
 
+int32 AWaveGameState::GetGoalScore() const
+{
+	return WaveGoalScore;
+}
+
 void AWaveGameState::AddScore(int32 Amount)
 {
 	UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
@@ -44,9 +45,25 @@ void AWaveGameState::AddScore(int32 Amount)
 		if (WaveGameInstance)
 		{
 			Score += Amount;
+			OnScoreChanged.Broadcast(Score);
 			WaveGameInstance->AddToScore(Amount);
 		}
 	}
+}
+
+int32 AWaveGameState::GetCurrentWaveIndex() const
+{
+	return CurrentWaveIndex;
+}
+
+int32 AWaveGameState::GetCollectedCoinCount() const
+{
+	return CollectedCoinCount;
+}
+
+int32 AWaveGameState::GetSpawnedCoinCount() const
+{
+	return SpawnedCoinCount;
 }
 
 void AWaveGameState::StartLevel()
@@ -55,19 +72,19 @@ void AWaveGameState::StartLevel()
 	{
 		WavePlayerController->ShowGameHUD();
 	}
-
 	CurrentWaveIndex = 0;
+	OnWaveChanged.Broadcast(CurrentWaveIndex + 1);
 	StartWave();
 }
 
 void AWaveGameState::OnCoinCollected()
 {
 	CollectedCoinCount++;
+	OnCoinChanged.Broadcast(CollectedCoinCount, SpawnedCoinCount);
 	if (Score >= WaveGoalScore || CollectedCoinCount >= SpawnedCoinCount)
 	{
 		OnNextWave();
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("Current Score : %d"), Score));
 }
 
 void AWaveGameState::DestroyAllSpawned()
@@ -119,9 +136,16 @@ void AWaveGameState::EndLevel()
 
 void AWaveGameState::StartWave()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("Wave %d Start !"), CurrentWaveIndex + 1));
 	Score = 0;
 	SpawnedCoinCount = 0;
 	CollectedCoinCount = 0;
+	OnScoreChanged.Broadcast(Score);
+	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
+	{
+		PlayerCharacter->RemoveAllDebuff();
+		PlayerCharacter->SetActorLocation(FVector::ZeroVector);
+	}
 
 	TArray<AActor*> FoundVolumes;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
@@ -144,6 +168,7 @@ void AWaveGameState::StartWave()
 	FWaveDataRow* CurrentWave = WaveAllRows[CurrentWaveIndex];
 	if (!CurrentWave) return;
 	WaveGoalScore = CurrentWave->GoalScore;
+	OnGoalScoreChanged.Broadcast(WaveGoalScore);
 
 	for (const auto& SpawnItemInfo : CurrentWave->SpawnItemInfo)
 	{
@@ -183,6 +208,7 @@ void AWaveGameState::StartWave()
 		}
 	}
 
+	OnCoinChanged.Broadcast(CollectedCoinCount, SpawnedCoinCount);
 	WaveDuration = CurrentWave->WaveDuration;
 	SetTimerHandle();
 }
@@ -194,6 +220,7 @@ void AWaveGameState::OnNextWave()
 
 	ClearTimerHandle();
 	CurrentWaveIndex++;
+	OnWaveChanged.Broadcast(CurrentWaveIndex + 1);
 	FallingObstacles.Empty();
 	ExpandingObstacles.Empty();
 	DestroyAllSpawned();
@@ -211,6 +238,7 @@ void AWaveGameState::OnGameOver()
 {
 	if (AWavePlayerController* WavePlayerController = Cast<AWavePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
+		WavePlayerController->SetPause(true);
 		WavePlayerController->ShowMainMenu(true);
 	}
 }
@@ -222,7 +250,7 @@ void AWaveGameState::OnOperateObstacle(EObstacleType ObstacleType)
 	{
 		for (AFallingObstacle* Object : FallingObstacles)
 		{
-			if (Object || Object->CanActivate()) Obstacles.Add(Object);
+			if (Object && !Object->GetCanActivate()) Obstacles.Add(Object);
 		}
 
 	}
@@ -230,12 +258,12 @@ void AWaveGameState::OnOperateObstacle(EObstacleType ObstacleType)
 	{
 		for (AExpandingObstacle* Object : ExpandingObstacles)
 		{
-			if (Object || Object->CanActivate()) Obstacles.Add(Object);
+			if (Object && !Object->GetCanActivate()) Obstacles.Add(Object);
 		}
 	}
 
 	int32 MaxRandCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
-	int32 RandCount = FMath::RandRange(1, MaxRandCount);
+	int32 RandCount = FMath::RandRange(2, MaxRandCount);
 	int32 OperateCount = FMath::Min(RandCount, Obstacles.Num());
 
 	for (int32 i = 0; i < OperateCount; ++i)
@@ -266,67 +294,4 @@ void AWaveGameState::ClearTimerHandle()
 	GetWorldTimerManager().ClearTimer(ExpandTimerHandle);
 }
 
-void AWaveGameState::UpdateHUD()
-{
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		if (AWavePlayerController* WavePlayerController = Cast<AWavePlayerController>(PlayerController))
-		{
-			if (UUserWidget* HUDWidget = WavePlayerController->GetHUDWidget())
-			{
-				if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
-				{
-					float RemainingTime = GetWorldTimerManager().GetTimerRemaining(WaveTimerHandle);
-					TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time : %.1f"), FMath::Max(0.f, RemainingTime))));
-				}
-
-				if (UTextBlock* LevelText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
-				{
-					LevelText->SetText(FText::FromString(FString::Printf(TEXT("Level : %d"), CurrentLevelIndex + 1)));
-				}
-
-				if (UTextBlock* WaveText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Wave"))))
-				{
-					WaveText->SetText(FText::FromString(FString::Printf(TEXT("Wave : %d"), CurrentWaveIndex + 1)));
-				}
-
-				if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
-				{
-					ScoreText->SetText(FText::FromString(FString::Printf(TEXT("Score : %d"), Score)));
-				}
-
-				if (UTextBlock* GoalScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("GoalScore"))))
-				{
-					GoalScoreText->SetText(FText::FromString(FString::Printf(TEXT("GoalScore : %d"), WaveGoalScore)));
-				}
-
-				if (UTextBlock* TotalScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("TotalScore"))))
-				{
-					UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
-					if (!WaveGameInstance) return;
-
-					int32 TotalScore = WaveGameInstance->GetTotalScore();
-					TotalScoreText->SetText(FText::FromString(FString::Printf(TEXT("TotalScore : %d"), TotalScore)));
-				}
-
-				if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
-				{
-					if (UTextBlock* PlayerSlowStack = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("PlayerSlowStack"))))
-					{
-						PlayerSlowStack->SetText(FText::FromString(FString::Printf(TEXT("PlayerSlowStack : %d"), PlayerCharacter->SlowStack)));
-					}
-					if (UTextBlock* PlayerReverseStack = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("PlayerReverseStack"))))
-					{
-						PlayerReverseStack->SetText(FText::FromString(FString::Printf(TEXT("PlayerReverseStack : %d"), PlayerCharacter->ReverseStack)));
-					}
-				}
-				
-				if (UTextBlock* RemainingCoinCountText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("RemainingCoinCount"))))
-				{
-					RemainingCoinCountText->SetText(FText::FromString(FString::Printf(TEXT("RemainingCoinCount : %d"), SpawnedCoinCount - CollectedCoinCount)));
-				}
-			}
-		}
-	}
-}
 

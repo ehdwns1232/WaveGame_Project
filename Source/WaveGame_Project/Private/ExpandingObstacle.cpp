@@ -1,6 +1,6 @@
 ﻿#include "ExpandingObstacle.h"
-#include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
+#include "PlayerCharacter.h"
 
 AExpandingObstacle::AExpandingObstacle()
 {
@@ -36,11 +36,6 @@ void AExpandingObstacle::ActivateObstacle()
 	bCanActivate = true;
 }
 
-bool AExpandingObstacle::CanActivate()
-{
-	return bCanActivate;
-}
-
 float AExpandingObstacle::CalculateAlpha()
 {
 	switch (EasingMode)
@@ -58,5 +53,20 @@ float AExpandingObstacle::CalculateAlpha()
 	return Alpha;
 }
 
+void AExpandingObstacle::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!bCanApplyDamage) return;
 
+	Super::OnObstacleHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+	
+	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
+	{
+		FVector PushDir = PlayerCharacter->GetActorLocation() - GetActorLocation();
+		PushDir.Normalize();
+
+		FVector PushVelocity = PushDir * PushPower;
+
+		PlayerCharacter->LaunchCharacter(PushVelocity, true, true);
+	}
+}
 

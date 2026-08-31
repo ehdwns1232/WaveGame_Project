@@ -16,9 +16,9 @@ public:
 
 protected:
 	UFUNCTION()
-	void OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	virtual void OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 public:
-	virtual bool CanActivate();
+	bool GetCanActivate();
 	virtual void ActivateObstacle();
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle|Components")
@@ -33,4 +33,8 @@ public:
 
 protected:
 	bool bCanActivate = false;
+	bool bCanApplyDamage = true;
+
+private:
+	FTimerHandle ResetApplyDamageTimerHandle;
 };

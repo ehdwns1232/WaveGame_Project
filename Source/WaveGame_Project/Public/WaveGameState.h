@@ -15,6 +15,11 @@ enum class EObstacleType : uint8
 	Expand
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWaveChanged, int32, CurWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, CurScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoalScoreChanged, int32, GoalScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCoinChanged, int32, CollectedCoin, int32, TotalCoin);
+
 UCLASS()
 class WAVEGAME_PROJECT_API AWaveGameState : public AGameState
 {
@@ -27,9 +32,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
-	UFUNCTION(BlueprintPure, Category = "Score")
 	int32 GetScore() const;
-	UFUNCTION(BlueprintCallable, Category = "Score")
+	int32 GetGoalScore() const;
+	int32 GetCurrentWaveIndex() const;
+	int32 GetCollectedCoinCount() const;
+	int32 GetSpawnedCoinCount() const;
+
+public:
 	void AddScore(int32 Amount);
 
 	void OnCoinCollected();
@@ -47,8 +56,7 @@ public:
 	void SetTimerHandle();
 	void ClearTimerHandle();
 
-	void UpdateHUD();
-public:
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TArray<TObjectPtr<ABaseItem>> AllItems;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
@@ -74,8 +82,16 @@ public:
 	int32 CurrentWaveIndex = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level|Wave")
 	int32 WaveGoalScore = 0;
-private:
-	FTimerHandle UpdateHUDTimerHandle;
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnWaveChanged OnWaveChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnCoinChanged OnCoinChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnScoreChanged OnScoreChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnGoalScoreChanged OnGoalScoreChanged;
 
 	FTimerHandle WaveTimerHandle;
 	float WaveDuration = 0.f;

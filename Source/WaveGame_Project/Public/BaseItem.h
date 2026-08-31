@@ -38,7 +38,7 @@ public:
 	virtual void DestroyItem();
 	FName GetItemName() const;
 
-	void ApplyNameWidget();
+	void ApplyItemWidget();
 	UFUNCTION()
 	void OnItemWidgetOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
@@ -53,7 +53,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
 	TObjectPtr<USphereComponent> ItemWidgetCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
-	TObjectPtr<UWidgetComponent> ItemWidget;
+	TObjectPtr<UWidgetComponent> ItemWidgetComp;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
 	TObjectPtr<UTexture2D> ItemIcon;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
@@ -63,4 +63,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName ItemName;
+
+private:
+	bool bIsNearPlayer = false;
 };
