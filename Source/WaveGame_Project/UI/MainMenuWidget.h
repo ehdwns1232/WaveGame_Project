@@ -17,7 +17,7 @@ public:
 	virtual void NativeConstruct() override;
 
 public:
-	void UpdateMenuState(bool bIsRestart);
+	void UpdateMenuState(bool bIsRestart, bool bIsClear);
 	void PlayGameOverAnim();
 
 public:
@@ -66,4 +66,5 @@ protected:
 
 private:
 	bool bIsGameOver = false;
+	bool bIsGameClear = false;
 };

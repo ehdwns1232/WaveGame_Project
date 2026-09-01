@@ -6,6 +6,7 @@
 #include "ObstacleBase.h"
 #include "FallingObstacle.h"
 #include "ExpandingObstacle.h"
+#include "ExplosionObstacle.h"
 #include "WavePlayerController.h"
 #include "PlayerCharacter.h"
 
@@ -18,7 +19,13 @@ void AWaveGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	StartLevel();
+	WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
+
+	FString CurrentMapName = GetWorld()->GetMapName();
+	if (!CurrentMapName.Contains(TEXT("MenuLevel"), ESearchCase::IgnoreCase))
+	{
+		StartLevel();
+	}
 }
 
 void AWaveGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -40,14 +47,11 @@ int32 AWaveGameState::GetGoalScore() const
 
 void AWaveGameState::AddScore(int32 Amount)
 {
-	UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
+	if (WaveGameInstance)
 	{
-		if (WaveGameInstance)
-		{
-			Score += Amount;
-			OnScoreChanged.Broadcast(Score);
-			WaveGameInstance->AddToScore(Amount);
-		}
+		Score += Amount;
+		OnScoreChanged.Broadcast(Score);
+		WaveGameInstance->AddToScore(Amount);
 	}
 }
 
@@ -103,6 +107,11 @@ void AWaveGameState::DestroyAllSpawned()
 	{
 		if (Actor) Actor->Destroy();
 	}
+
+	for (AActor* Actor : ExplosionObstacles)
+	{
+		if (Actor) Actor->Destroy();
+	}
 }
 
 void AWaveGameState::OnNextLevel()
@@ -111,18 +120,12 @@ void AWaveGameState::OnNextLevel()
 
 	if (CurrentLevelIndex >= MaxLevel)
 	{
-		OnGameOver();
+		OnGameOver(true);
 		return;
 	}
 
-	UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
-	{
-		if (WaveGameInstance)
-		{
-			WaveGameInstance->SetCurrentLevelIndex(CurrentLevelIndex);
-		}
-	}
-
+	WaveGameInstance->SetCurrentLevelIndex(CurrentLevelIndex);
+	
 	EndLevel();
 }
 
@@ -136,7 +139,8 @@ void AWaveGameState::EndLevel()
 
 void AWaveGameState::StartWave()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("Wave %d Start !"), CurrentWaveIndex + 1));
+	// Wave 시작 | 점수, 코인 갯수, 플레이어 디버프, 위치 초기화
+	UE_LOG(LogTemp, Warning, TEXT("Wave %d Start"), CurrentWaveIndex + 1);
 	Score = 0;
 	SpawnedCoinCount = 0;
 	CollectedCoinCount = 0;
@@ -147,6 +151,7 @@ void AWaveGameState::StartWave()
 		PlayerCharacter->SetActorLocation(FVector::ZeroVector);
 	}
 
+	// LevelIndex, GoalScore, WaveDuration 초기화 해주고 데이터 테이블기반 스폰정보 가져오기
 	TArray<AActor*> FoundVolumes;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
 	if (FoundVolumes.IsEmpty()) return;
@@ -154,9 +159,8 @@ void AWaveGameState::StartWave()
 	ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(FoundVolumes[0]);
 	if (!SpawnVolume) return;
 
-	UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
 	if (!WaveGameInstance) return;
-
+	
 	CurrentLevelIndex = WaveGameInstance->GetCurrentLevelIndex();
 	UDataTable* LevelTable = WaveGameInstance->GetCurrentTable();
 	if (!LevelTable) return;
@@ -169,7 +173,9 @@ void AWaveGameState::StartWave()
 	if (!CurrentWave) return;
 	WaveGoalScore = CurrentWave->GoalScore;
 	OnGoalScoreChanged.Broadcast(WaveGoalScore);
+	WaveDuration = CurrentWave->WaveDuration;
 
+	// 스폰
 	for (const auto& SpawnItemInfo : CurrentWave->SpawnItemInfo)
 	{
 		if (UClass* ActualClass = SpawnItemInfo.SpawnClass)
@@ -205,25 +211,30 @@ void AWaveGameState::StartWave()
 					ExpandingObstacles.Add(Cast<AExpandingObstacle>(Actor));
 				}
 			}
+			else if (ActualClass->IsChildOf(AExplosionObstacle::StaticClass()))
+			{
+				TempArray = SpawnVolume->SpawnObstacleBottom(ActualClass, SpawnItemInfo.SpawnCount);
+				for (AActor* Actor : TempArray)
+				{
+					ExplosionObstacles.Add(Cast<AExplosionObstacle>(Actor));
+				}
+			}
 		}
 	}
 
 	OnCoinChanged.Broadcast(CollectedCoinCount, SpawnedCoinCount);
-	WaveDuration = CurrentWave->WaveDuration;
 	SetTimerHandle();
 }
 
 void AWaveGameState::OnNextWave()
 {
-	UWaveGameInstance* WaveGameInstance = Cast<UWaveGameInstance>(GetGameInstance());
-	if (!WaveGameInstance) return;
-
 	ClearTimerHandle();
 	CurrentWaveIndex++;
 	OnWaveChanged.Broadcast(CurrentWaveIndex + 1);
+	DestroyAllSpawned();
 	FallingObstacles.Empty();
 	ExpandingObstacles.Empty();
-	DestroyAllSpawned();
+	ExplosionObstacles.Empty();
 
 	if (CurrentWaveIndex >= MaxWave)
 	{
@@ -234,12 +245,12 @@ void AWaveGameState::OnNextWave()
 	StartWave();
 }
 
-void AWaveGameState::OnGameOver()
+void AWaveGameState::OnGameOver(bool bIsClear)
 {
 	if (AWavePlayerController* WavePlayerController = Cast<AWavePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
 		WavePlayerController->SetPause(true);
-		WavePlayerController->ShowMainMenu(true);
+		WavePlayerController->ShowMainMenu(true, bIsClear);
 	}
 }
 
@@ -261,6 +272,13 @@ void AWaveGameState::OnOperateObstacle(EObstacleType ObstacleType)
 			if (Object && !Object->GetCanActivate()) Obstacles.Add(Object);
 		}
 	}
+	else if (ObstacleType == EObstacleType::Explosion)
+	{
+		for (AExplosionObstacle* Object : ExplosionObstacles)
+		{
+			if (Object && !Object->GetCanActivate()) Obstacles.Add(Object);
+		}
+	}
 
 	int32 MaxRandCount = (CurrentLevelIndex + 1) * 2 + (CurrentWaveIndex + 1) * 2;
 	int32 RandCount = FMath::RandRange(2, MaxRandCount);
@@ -271,20 +289,32 @@ void AWaveGameState::OnOperateObstacle(EObstacleType ObstacleType)
 		int32 RandIndex = FMath::RandRange(0, Obstacles.Num() - 1);
 
 		Obstacles[RandIndex]->ActivateObstacle();
-
 		Obstacles.RemoveAt(RandIndex);
 	}
 }
 
+void AWaveGameState::NotifyExplosionChanged()
+{
+	OnExplosionChanged.Broadcast();
+}
+
 void AWaveGameState::SetTimerHandle()
 {
-	GetWorldTimerManager().SetTimer(WaveTimerHandle, this, &AWaveGameState::OnGameOver, WaveDuration, false);
+	FTimerDelegate TimeOverDelegate;
+	TimeOverDelegate.BindUObject(this, &AWaveGameState::OnGameOver, false);
+	GetWorldTimerManager().SetTimer(WaveTimerHandle, TimeOverDelegate, WaveDuration, false);
 	FTimerDelegate FallDelegate;
 	FallDelegate.BindUObject(this, &AWaveGameState::OnOperateObstacle, EObstacleType::Fall);
 	GetWorldTimerManager().SetTimer(FallTimerHandle, FallDelegate, FallDelay, true);
 	FTimerDelegate ExpandDelegate;
 	ExpandDelegate.BindUObject(this, &AWaveGameState::OnOperateObstacle, EObstacleType::Expand);
 	GetWorldTimerManager().SetTimer(ExpandTimerHandle, ExpandDelegate, ExpandDelay, true);
+	if (CurrentWaveIndex == 2)
+	{
+		FTimerDelegate ExplosionDelegate;
+		ExplosionDelegate.BindUObject(this, &AWaveGameState::OnOperateObstacle, EObstacleType::Explosion);
+		GetWorldTimerManager().SetTimer(ExplosionTimerHandle, ExplosionDelegate, ExplosionDelay, true);
+	}
 }
 
 void AWaveGameState::ClearTimerHandle()
@@ -292,6 +322,7 @@ void AWaveGameState::ClearTimerHandle()
 	GetWorldTimerManager().ClearTimer(WaveTimerHandle);
 	GetWorldTimerManager().ClearTimer(FallTimerHandle);
 	GetWorldTimerManager().ClearTimer(ExpandTimerHandle);
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
 }
 
 

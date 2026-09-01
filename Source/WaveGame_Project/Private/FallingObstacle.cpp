@@ -8,11 +8,11 @@ AFallingObstacle::AFallingObstacle()
 	StaticMeshComp->SetEnableGravity(false);
 	StaticMeshComp->SetMobility(EComponentMobility::Movable);
 
-	HitParticle = nullptr;
 }
 
 void AFallingObstacle::ActivateObstacle()
 {
+	Super::ActivateObstacle();
 	StaticMeshComp->SetSimulatePhysics(true);
 	StaticMeshComp->SetEnableGravity(true);
 	bCanActivate = true;
@@ -33,16 +33,6 @@ void AFallingObstacle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void AFallingObstacle::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	if (!bCanApplyDamage) return;
-
-	Super::OnObstacleHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
-	if (HitParticle)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, HitComponent->GetComponentLocation(), HitComponent->GetComponentRotation(), true);
-	}
-}
 
 
 

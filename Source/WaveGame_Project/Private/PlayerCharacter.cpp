@@ -2,13 +2,12 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "WavePlayerController.h"
 #include "GameFrameWork/CharacterMovementComponent.h"
-#include "Components/WidgetComponent.h"
-#include "Components/TextBlock.h"
-#include "Components/ProgressBar.h"
 #include "WaveGameState.h"
-#include "UI/HUDWidget.h"
+#include "BaseItem.h"
+#include "PickupItem.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -105,6 +104,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 				EnhancedInput->BindAction(PlayerController->SprintAction, ETriggerEvent::Started, this, &APlayerCharacter::StartSprint);
 				EnhancedInput->BindAction(PlayerController->SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopSprint);
 			}
+			if (PlayerController->PickupAction)
+			{
+				EnhancedInput->BindAction(PlayerController->PickupAction, ETriggerEvent::Started, this, &APlayerCharacter::Pickup);
+			}
 		}
 	}
 }
@@ -119,7 +122,6 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	{
 		OnDeath();
 	}
-
 
 	return ActualDamage;
 }
@@ -166,9 +168,9 @@ void APlayerCharacter::StartSprint(const FInputActionValue& Value)
 	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
 	if (MovementComp && CurrentSprintRate > 0.1f)
 	{
-		SetActorTickEnabled(true);
 		bIsSprinting = true;
 		MovementComp->MaxWalkSpeed = SprintSpeed;
+		SetActorTickEnabled(true);
 	}
 }
 
@@ -185,6 +187,29 @@ void APlayerCharacter::StopSprint(const FInputActionValue& Value)
 		else
 		{
 			MovementComp->MaxWalkSpeed = NormalSpeed;
+		}
+	}
+}
+
+void APlayerCharacter::Pickup(const FInputActionValue& Value)
+{
+	TArray<AActor*> OverlappedItems;
+
+	GetCapsuleComponent()->GetOverlappingActors(OverlappedItems, ABaseItem::StaticClass());
+	
+	if (OverlappedItems.IsEmpty()) return;
+
+	for (AActor* Actor : OverlappedItems)
+	{
+		if (APickupItem* PickupItem = Cast<APickupItem>(Actor))
+		{
+			float Distance = FVector::Distance(GetActorLocation(), PickupItem->GetActorLocation());
+
+			if (Distance <= PickupItem->GetPickupDistance())
+			{
+				PickupItem->ActivateItem(this);
+				break;
+			}
 		}
 	}
 }
@@ -225,12 +250,18 @@ void APlayerCharacter::AddHealth(float Amount)
 	OnHPChanged.Broadcast(Health, MaxHealth);
 }
 
+void APlayerCharacter::AddStamina(float Amount)
+{
+	CurrentSprintRate = FMath::Clamp(CurrentSprintRate + Amount, 0.0f, MaxSprintRate);
+	OnSprintChanged.Broadcast(CurrentSprintRate, MaxSprintRate);
+}
+
 void APlayerCharacter::OnDeath()
 {
 	AWaveGameState* WaveGameState = Cast<AWaveGameState>(GetWorld()->GetGameState());
 	if (WaveGameState)
 	{
-		WaveGameState->OnGameOver();
+		WaveGameState->OnGameOver(false);
 	}
 }
 

@@ -28,7 +28,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
 	void ShowGameHUD();
 	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
-	void ShowMainMenu(bool bIsRestart);
+	void ShowMainMenu(bool bIsRestart, bool bIsClear);
 	UFUNCTION(BlueprintCallable, Category = "UI|Menu")
 	void StartGame();
 public:
@@ -42,6 +42,8 @@ public:
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputAction> SprintAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> PickupAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|HUD")
 	TSubclassOf<UHUDWidget> HUDWidgetClass;
@@ -53,5 +55,4 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI|Menu")
 	TObjectPtr<UMainMenuWidget> MainMenuWidgetInstance;
 	
-
 };

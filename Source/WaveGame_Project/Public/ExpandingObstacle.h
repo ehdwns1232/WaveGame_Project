@@ -4,8 +4,6 @@
 #include "ObstacleBase.h"
 #include "ExpandingObstacle.generated.h"
 
-class UArrowComponent;
-
 UENUM(BlueprintType)
 enum class EEasingMode : uint8
 {
@@ -41,7 +39,7 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PushPower")
-	float PushPower = 1000.0f;
+	float PushPower = 1500.0f;
 
 private:
 	float Alpha = 0.0f;

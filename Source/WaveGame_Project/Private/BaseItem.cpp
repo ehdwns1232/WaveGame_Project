@@ -99,6 +99,8 @@ void ABaseItem::Tick(float DeltaTime)
 
 void ABaseItem::OnItemOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (!bIsAutoConsumable) return;
+
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap !!!")));
@@ -169,7 +171,7 @@ void ABaseItem::ApplyItemWidget()
 
 	if (UItemWidget* ItemWidget = Cast<UItemWidget>(ItemWidgetComp->GetUserWidgetObject()))
 	{
-		ItemWidget->SetItemInfo(ItemName, ItemIcon);
+		ItemWidget->SetItemInfo(ItemName, ItemIcon, bIsAutoConsumable);
 	}
 }
 

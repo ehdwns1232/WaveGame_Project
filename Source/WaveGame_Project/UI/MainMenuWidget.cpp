@@ -35,7 +35,7 @@ void UMainMenuWidget::UpdateTotalScore(int32 TotalScore)
 	TotalScoreText->SetText(FText::FromString(FString::Printf(TEXT("Total Score : %d"), TotalScore)));
 }
 
-void UMainMenuWidget::UpdateMenuState(bool bIsRestart)
+void UMainMenuWidget::UpdateMenuState(bool bIsRestart, bool bIsClear)
 {
 	if (!StartButtonText) return;
 
@@ -49,6 +49,16 @@ void UMainMenuWidget::UpdateMenuState(bool bIsRestart)
 	else
 	{
 		StartButtonText->SetText(FText::FromString(FString::Printf(TEXT("RESTART"))));
+		if (bIsClear)
+		{
+			GameOverText->SetText(FText::FromString(FString::Printf(TEXT("GAME CLEAR"))));
+			GameOverText->SetColorAndOpacity(FSlateColor(FLinearColor::Green));
+		}
+		else
+		{
+			GameOverText->SetText(FText::FromString(FString::Printf(TEXT("GAME OVER"))));
+			GameOverText->SetColorAndOpacity(FSlateColor(FLinearColor::Red));
+		}
 		GameOverText->SetVisibility(ESlateVisibility::Visible);
 		TotalScoreText->SetVisibility(ESlateVisibility::Visible);
 		PlayGameOverAnim();
