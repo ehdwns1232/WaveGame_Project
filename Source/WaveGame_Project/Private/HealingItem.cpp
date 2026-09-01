@@ -3,7 +3,7 @@
 
 AHealingItem::AHealingItem()
 {
-	ItemName = "Healing";
+	ItemName = "HP_Potion";
 }
 
 void AHealingItem::ActivateItem(AActor* Activator)

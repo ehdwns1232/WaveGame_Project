@@ -26,13 +26,15 @@ public:
 	TArray<AActor*> SpawnItem(TSubclassOf<AActor> ItemClass, int32 SpawnCount);
 	TArray<AActor*> SpawnObstacleSide(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
 	TArray<AActor*> SpawnObstacleTop(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
+	TArray<AActor*> SpawnObstacleBottom(TSubclassOf<AActor> ObstacleClass, int32 SpawnCount);
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
 	TObjectPtr<USceneComponent> RootScene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	TObjectPtr<UBoxComponent> ItemSpawnBox;
+	TObjectPtr<UBoxComponent> BottomSpawnBox;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	TObjectPtr<UBoxComponent> ObstacleTopSpawnBox;
+	TObjectPtr<UBoxComponent> TopSpawnBox;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	TObjectPtr<UBoxComponent> ObstacleSideSpawnBox;
+	TObjectPtr<UBoxComponent> SideSpawnBox;
 };

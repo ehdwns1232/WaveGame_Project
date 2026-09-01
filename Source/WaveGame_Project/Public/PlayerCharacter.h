@@ -50,6 +50,7 @@ public:
 
 public:
 	void AddHealth(float Amount);
+	void AddStamina(float Amount);
 	void OnDeath();
 	void AddSlowStack(float SlowTime);
 	void AddReverseStack(float ReverseTime);
@@ -62,6 +63,7 @@ public:
 	void MaintainReverse(float ReverseTime);
 	void SetSprintSpeed(float NewSpeed);
 	void RemoveAllDebuff();
+
 public:
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
@@ -75,7 +77,8 @@ public:
 	void StartSprint(const FInputActionValue& Value);
 	UFUNCTION()
 	void StopSprint(const FInputActionValue& Value);
-
+	UFUNCTION()
+	void Pickup(const FInputActionValue& Value);
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComp;
@@ -107,7 +110,7 @@ public:
 	FOnReverseStackChanged OnReverseStackChanged;
 	UPROPERTY(BlueprintAssignable)
 	FOnDirectionChanged OnDirectionChanged;
-
+	
 private:
 	FTimerHandle SlowTimerHandle;
 	FTimerHandle ReverseTimerHandle;
@@ -116,8 +119,8 @@ private:
 	float NormalSpeed = 600.0f;
 	float SpeedMultipiler = 1.7f;
 	float SprintSpeed = NormalSpeed * SpeedMultipiler;
-	float MaxSprintRate = 5.0f;
-	float CurrentSprintRate = 5.0f;
+	float MaxSprintRate = 10.0f;
+	float CurrentSprintRate = MaxSprintRate;
 	float SprintRecovery = 1.0f;
 
 	bool bIsSprinting = false;

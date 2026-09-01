@@ -1,6 +1,7 @@
 ﻿#include "ObstacleBase.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 AObstacleBase::AObstacleBase()
 {
@@ -37,6 +38,17 @@ void AObstacleBase::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* Oth
 {
 	if (bCanApplyDamage && OtherActor && OtherActor->ActorHasTag(FName(TEXT("Player"))))
 	{
+		UParticleSystemComponent* Particle = nullptr;
+		if (ActivateParticle)
+		{
+			Particle = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ActivateParticle, GetActorLocation(), GetActorRotation(), true);
+		}
+
+		if (ActivateSound)
+		{
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ActivateSound, GetActorLocation());
+		}
+
 		bCanApplyDamage = false;
 		UGameplayStatics::ApplyDamage(OtherActor, HitDamage, nullptr, this, UDamageType::StaticClass());
 		TWeakObjectPtr<AObstacleBase> WeakPtr = this;

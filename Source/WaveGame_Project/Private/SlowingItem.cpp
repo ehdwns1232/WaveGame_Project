@@ -3,7 +3,7 @@
 
 ASlowingItem::ASlowingItem()
 {
-	ItemName = "Slowing";
+	ItemName = "Slow";
 }
 
 void ASlowingItem::ActivateItem(AActor* Activator)

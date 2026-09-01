@@ -20,29 +20,27 @@ protected:
 
 public:
 	virtual void Tick(float Deltatime) override;
-	UFUNCTION()
-	virtual void OnItemOverlap(
-		UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult);
-	UFUNCTION()
-	virtual void OnItemEndOverlap(
-		UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);
-	virtual void ActivateItem(AActor* Activator);
-	virtual void DestroyItem();
-	FName GetItemName() const;
 
-	void ApplyItemWidget();
+public:
+	UFUNCTION()
+	virtual void OnItemOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	virtual void OnItemEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	void OnItemWidgetOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnItemWidgetEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+public:
+	virtual void ActivateItem(AActor* Activator);
+
+protected:
+	virtual void DestroyItem();
+
+public:
+	FName GetItemName() const;
+	void ApplyItemWidget();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
 	TObjectPtr<USceneComponent> Scene;
@@ -60,7 +58,8 @@ public:
 	TObjectPtr<UParticleSystem> PickupParticle;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI")
 	TObjectPtr<USoundBase> PickupSound;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|UI");
+	bool bIsAutoConsumable = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName ItemName;
 

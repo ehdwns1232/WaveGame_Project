@@ -1,6 +1,7 @@
 ﻿#include "ExpandingObstacle.h"
 #include "Components/BoxComponent.h"
 #include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 AExpandingObstacle::AExpandingObstacle()
 {
@@ -32,6 +33,7 @@ void AExpandingObstacle::Tick(float DeltaTime)
 
 void AExpandingObstacle::ActivateObstacle()
 {
+	Super::ActivateObstacle();
 	Alpha = 0.f;
 	bCanActivate = true;
 }
@@ -58,8 +60,8 @@ void AExpandingObstacle::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor
 	if (!bCanApplyDamage) return;
 
 	Super::OnObstacleHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
-	
-	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
+
+	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor))
 	{
 		FVector PushDir = PlayerCharacter->GetActorLocation() - GetActorLocation();
 		PushDir.Normalize();

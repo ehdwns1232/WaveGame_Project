@@ -23,7 +23,7 @@ void UDebuffWidget::UpdateSlowDebuff(int32 SlowStack)
 
 	if (SlowStack > 0)
 	{
-		SlowStackText->SetText(FText::FromString(FString::Printf(TEXT("SlowDebuff : %d"), SlowStack)));
+		SlowStackText->SetText(FText::FromString(FString::Printf(TEXT("Slow Debuff : %d"), SlowStack)));
 		SetVisibility(ESlateVisibility::Visible);
 		SlowStackText->SetVisibility(ESlateVisibility::Visible);
 	}
@@ -40,7 +40,7 @@ void UDebuffWidget::UpdateReverseDebuff(int32 ReverseStack)
 
 	if (ReverseStack > 0)
 	{
-		ReverseStackText->SetText(FText::FromString(FString::Printf(TEXT("ReverseDebuff : %d"), ReverseStack)));
+		ReverseStackText->SetText(FText::FromString(FString::Printf(TEXT("Reverse Debuff : %d"), ReverseStack)));
 		SetVisibility(ESlateVisibility::Visible);
 		ReverseStackText->SetVisibility(ESlateVisibility::Visible);
 	}

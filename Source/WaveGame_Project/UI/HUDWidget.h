@@ -4,7 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "HUDWidget.generated.h"
 
-class UTextBlock;
+class UGameInfoWidget;
 class UTimeWidget;
 class UPlayerStatsWidget;
 class UPlayerDirectionWidget;
@@ -16,26 +16,9 @@ class WAVEGAME_PROJECT_API UHUDWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
-	virtual void NativeConstruct() override;
-
-public:
-	UFUNCTION()
-	void UpdateLevel(int32 CurLevel);
-	UFUNCTION()
-	void UpdateWave(int32 CurWave);
-	UFUNCTION()
-	void UpdateCoin(int32 CollectedCoinCount, int32 TotalCoinCount);
-
 protected:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> LevelText;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> WaveText;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> CoinText;
+	TObjectPtr<UGameInfoWidget> GameInfoWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTimeWidget> TimeWidget;

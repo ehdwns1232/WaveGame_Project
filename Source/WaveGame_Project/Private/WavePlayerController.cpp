@@ -12,6 +12,7 @@ AWavePlayerController::AWavePlayerController()
 	, LookAction(nullptr)
 	, JumpAction(nullptr)
 	, SprintAction(nullptr)
+	, PickupAction(nullptr)
 	, HUDWidgetClass(nullptr)
 	, HUDWidgetInstance(nullptr)
 	, MainMenuWidgetClass(nullptr)
@@ -34,7 +35,7 @@ void AWavePlayerController::BeginPlay()
 	FString CurrentMapName = GetWorld()->GetMapName();
 	if (CurrentMapName.Contains(TEXT("MenuLevel"), ESearchCase::IgnoreCase))
 	{
-		ShowMainMenu(false);
+		ShowMainMenu(false, false);
 	}
 }
 
@@ -74,7 +75,7 @@ void AWavePlayerController::ShowGameHUD()
 	}
 }
 
-void AWavePlayerController::ShowMainMenu(bool bIsRestart)
+void AWavePlayerController::ShowMainMenu(bool bIsRestart, bool bIsClear)
 {
 	if (HUDWidgetInstance)
 	{
@@ -96,7 +97,7 @@ void AWavePlayerController::ShowMainMenu(bool bIsRestart)
 		MainMenuWidgetInstance->AddToViewport();
 		bShowMouseCursor = true;
 		SetInputMode(FInputModeUIOnly());
-		MainMenuWidgetInstance->UpdateMenuState(bIsRestart);
+		MainMenuWidgetInstance->UpdateMenuState(bIsRestart, bIsClear);
 	}
 }
 
@@ -111,3 +112,4 @@ void AWavePlayerController::StartGame()
 	UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel"));
 	SetPause(false);
 }
+

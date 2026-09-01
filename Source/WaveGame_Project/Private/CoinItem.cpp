@@ -18,7 +18,6 @@ void ACoinItem::ActivateItem(AActor* Activator)
 			{
 				GameState->AddScore(PointValue);
 				GameState->OnCoinCollected();
-				UE_LOG(LogTemp, Warning, TEXT("Player Gained Point : %d"), PointValue);
 			}
 		}
 		DestroyItem();
