@@ -29,7 +29,6 @@ void UDebuffWidget::UpdateSlowDebuff(int32 SlowStack)
 	}
 	else
 	{
-		SetVisibility(ESlateVisibility::Collapsed);
 		SlowStackText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
@@ -46,7 +45,6 @@ void UDebuffWidget::UpdateReverseDebuff(int32 ReverseStack)
 	}
 	else
 	{
-		SetVisibility(ESlateVisibility::Collapsed);
 		ReverseStackText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
