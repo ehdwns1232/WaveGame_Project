@@ -1,6 +1,6 @@
 ﻿#include "UI/GameInfoWidget.h"
-#include "WaveGameInstance.h"
-#include "WaveGameState.h"
+#include "Game/WaveGameInstance.h"
+#include "Game/WaveGameState.h"
 #include "Components/TextBlock.h"
 
 void UGameInfoWidget::NativeConstruct()

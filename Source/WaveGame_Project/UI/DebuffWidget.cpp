@@ -1,5 +1,5 @@
 ﻿#include "UI/DebuffWidget.h"
-#include "PlayerCharacter.h"
+#include "Player/PlayerCharacter.h"
 #include "Components/TextBlock.h"
 
 void UDebuffWidget::NativeConstruct()

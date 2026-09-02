@@ -1,5 +1,5 @@
 ﻿#include "UI/TimeWidget.h"
-#include "WaveGameState.h"
+#include "Game/WaveGameState.h"
 #include "Components/TextBlock.h"
 
 void UTimeWidget::NativeConstruct()

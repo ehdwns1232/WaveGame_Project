@@ -1,6 +1,6 @@
 ﻿#include "UI/ScoreWidget.h"
-#include "WaveGameState.h"
-#include "WaveGameInstance.h"
+#include "Game/WaveGameState.h"
+#include "Game/WaveGameInstance.h"
 #include "Components/TextBlock.h"
 
 void UScoreWidget::NativeConstruct()

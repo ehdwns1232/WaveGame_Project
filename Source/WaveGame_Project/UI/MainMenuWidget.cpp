@@ -1,6 +1,6 @@
 ﻿#include "UI/MainMenuWidget.h"
-#include "WavePlayerController.h"
-#include "WaveGameInstance.h"
+#include "Player/WavePlayerController.h"
+#include "Game/WaveGameInstance.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Kismet/KismetSystemLibrary.h"

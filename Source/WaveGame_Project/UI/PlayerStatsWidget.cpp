@@ -1,5 +1,5 @@
 ﻿#include "UI/PlayerStatsWidget.h"
-#include "PlayerCharacter.h"
+#include "Player/PlayerCharacter.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 
